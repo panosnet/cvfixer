@@ -1,0 +1,75 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git push)",
+      "Bash(git branch*)",
+      "Bash(git show*)",
+      "Bash(git stash*)",
+      "Bash(ls*)",
+      "Bash(find . *)",
+      "Bash(grep*)",
+      "Bash(wc *)",
+      "Bash(cat /tmp/*)",
+      "Bash(tail *)",
+      "Bash(head *)",
+      "Bash(echo *)",
+      "Bash(pwd)",
+      "Bash(which *)",
+      "Bash(ps aux*)",
+      "Bash(pgrep *)",
+      "Bash(osascript *)",
+      "Bash(sleep *)",
+      "Bash(screencapture *)",
+      "Bash(npm run dev*)",
+      "Bash(npm run build*)",
+      "Bash(npm run dist*)",
+      "Bash(npx tsc*)",
+      "Bash(npx electron-vite*)",
+      "Bash(npm install*)",
+      "Bash(npm --version)",
+      "Bash(git --version)",
+      "Bash(pkill*)",
+      "Bash(kill *)",
+      "Bash(lsof*)",
+      "Bash(curl *)",
+      "Bash(brew *)",
+      "Bash(/opt/homebrew/opt/gh/bin/gh *)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)",
+      "Bash(rm -rf *)",
+      "Bash(git checkout -- .)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/panos/cvfixer && file=\"$CLAUDE_TOOL_INPUT_FILE_PATH\"; if [[ \"$file\" == */src/* && (\"$file\" == *.ts || \"$file\" == *.tsx) ]]; then result=$(npx tsc --noEmit 2>&1); if [ $? -ne 0 ]; then echo \"⚠️  TypeScript errors after editing $(basename $file):\"; echo \"$result\" | head -20; fi; fi"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cmd=\"$CLAUDE_TOOL_INPUT_COMMAND\"; if echo \"$cmd\" | grep -qE 'git push.*(--force|-f)'; then echo \"🛑 BLOCKED: Force push detected. This will overwrite remote history.\"; exit 1; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
