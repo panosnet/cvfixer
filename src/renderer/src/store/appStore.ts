@@ -4,6 +4,15 @@ import type {
   DesignSuggestion, TemplateType, Toast
 } from '../types'
 
+export interface ActivityLogEntry {
+  id: string
+  timestamp: number
+  type: 'analysis' | 'chat'
+  label: string
+  content: string
+  model: string
+}
+
 export interface AppState {
   page: 'welcome' | 'models' | 'apikeys' | 'workspace' | 'builder'
   ollamaRunning: boolean
@@ -30,6 +39,8 @@ export interface AppState {
   toasts: Toast[]
   tokenUsage: { inputTokens: number; outputTokens: number; model: string; provider: string } | null
   analysisStartTime: number | null
+  customInstructions: string
+  aiActivityLog: ActivityLogEntry[]
 }
 
 // ─── Persistence ─────────────────────────────────────────────────────────────
@@ -44,7 +55,12 @@ function saveSession(s: AppState) {
       selectedTemplate: s.selectedTemplate,
       templateOverridden: s.templateOverridden,
       pdfExported: s.pdfExported,
+      customInstructions: s.customInstructions,
     }))
+  } catch {}
+  try {
+    const logJson = JSON.stringify(s.aiActivityLog)
+    if (logJson.length < 2_000_000) localStorage.setItem('cvfixer_activityLog', logJson)
   } catch {}
   try {
     if (s.analysisResult) {
@@ -96,7 +112,12 @@ function loadSession(): Partial<AppState> {
       const editedDesign = localStorage.getItem('cvfixer_editedDesign')
       if (editedDesign) design = JSON.parse(editedDesign)
     } catch {}
-    return { ...session, analysisResult, currentCV, design }
+    let aiActivityLog: ActivityLogEntry[] = []
+    try {
+      const log = localStorage.getItem('cvfixer_activityLog')
+      if (log) aiActivityLog = JSON.parse(log)
+    } catch {}
+    return { ...session, analysisResult, currentCV, design, aiActivityLog }
   } catch {
     return {}
   }
@@ -144,6 +165,8 @@ let state: AppState = {
   toasts: [],
   tokenUsage: null,
   analysisStartTime: null,
+  customInstructions: persisted.customInstructions ?? '',
+  aiActivityLog: persisted.aiActivityLog ?? [],
 }
 
 function notify() {
@@ -355,6 +378,17 @@ export const actions = {
 
   markPdfExported: () => update({ pdfExported: true }),
 
+  setCustomInstructions: (customInstructions: string) => update({ customInstructions }),
+
+  addActivityLog: (entry: Omit<ActivityLogEntry, 'id'>) => {
+    const id = String(Date.now())
+    const newEntry: ActivityLogEntry = { ...entry, id }
+    const log = [newEntry, ...state.aiActivityLog].slice(0, 50)
+    update({ aiActivityLog: log })
+  },
+
+  clearActivityLog: () => update({ aiActivityLog: [] }),
+
   addToast: (message: string, type: Toast['type'] = 'info') => {
     if (state.toasts.length >= 5) {
       const id = String(++toastCounter)
@@ -378,6 +412,7 @@ export const actions = {
     localStorage.removeItem('cvfixer_result')
     localStorage.removeItem('cvfixer_editedCV')
     localStorage.removeItem('cvfixer_editedDesign')
+    localStorage.removeItem('cvfixer_activityLog')
     state = { ...state,
       page: 'workspace',
       cvText: '',

@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react'
-import { Download, Palette, Type, Layout, Check, Loader2, Edit3, Plus, X, ZoomIn, ZoomOut, FileText, AlertTriangle, Shield, MessageCircle, Send } from 'lucide-react'
+import { Download, Palette, Type, Layout, Check, Loader2, Edit3, Plus, X, ZoomIn, ZoomOut, FileText, AlertTriangle, Shield, MessageCircle, Send, Terminal } from 'lucide-react'
 import { useStore } from '../store/appStore'
 import type { TemplateType, DesignSuggestion } from '../types'
 import {
@@ -601,13 +601,17 @@ function SkillsField({ label, values, onChange, placeholder }: { label: string; 
 interface ChatMessage {
   role: 'user' | 'assistant'
   text: string
+  rawStream?: string
+  done?: boolean
 }
 
 function AIChatPanel({ cv, store, messages, setMessages }: { cv: any; store: ReturnType<typeof useStore>; messages: ChatMessage[]; setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>> }) {
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
+  const [expandedThinking, setExpandedThinking] = useState<number | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const streamAccRef = useRef('')
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -618,46 +622,54 @@ function AIChatPanel({ cv, store, messages, setMessages }: { cv: any; store: Ret
     if (!msg || sending || !store.activeConfig) return
 
     setInput('')
-    setMessages(prev => [...prev, { role: 'user', text: msg }])
+    setMessages(prev => [...prev, { role: 'user', text: msg, done: true }])
     setSending(true)
+    streamAccRef.current = ''
 
-    let unsubStream: (() => void) | null = null
+    setMessages(prev => [...prev, { role: 'assistant', text: '', rawStream: '', done: false }])
 
-    setMessages(prev => [...prev, { role: 'assistant', text: '...' }])
-
-    unsubStream = window.api.ai.onChatStream((chunk) => {
+    const unsubStream = window.api.ai.onChatStream((chunk) => {
+      streamAccRef.current += chunk
       setMessages(prev => {
         const updated = [...prev]
         const last = updated[updated.length - 1]
-        if (last && last.role === 'assistant') {
-          const current = last.text === '...' ? '' : last.text
-          updated[updated.length - 1] = { ...last, text: current + chunk }
+        if (last?.role === 'assistant' && !last.done) {
+          updated[updated.length - 1] = { ...last, rawStream: streamAccRef.current, text: streamAccRef.current }
         }
         return updated
       })
     })
 
     try {
-      const result = await window.api.ai.chatEditCV(store.activeConfig, cv, msg)
+      const result = await window.api.ai.chatEditCV(
+        store.activeConfig, cv, msg, store.customInstructions || undefined
+      )
+      const captured = streamAccRef.current
       if (result.success && result.cv) {
         store.updateCurrentCV(result.cv)
+        store.addActivityLog({
+          timestamp: Date.now(), type: 'chat',
+          label: `Chat: "${msg.slice(0, 60)}${msg.length > 60 ? '…' : ''}"`,
+          content: captured, model: store.activeConfig?.model ?? '',
+        })
         setMessages(prev => {
           const updated = [...prev]
-          updated[updated.length - 1] = { role: 'assistant', text: 'Done — CV updated. Check the preview.' }
+          updated[updated.length - 1] = { role: 'assistant', text: 'Done — CV updated.', rawStream: captured, done: true }
           return updated
         })
         store.addToast('CV updated from chat', 'success')
       } else {
         setMessages(prev => {
           const updated = [...prev]
-          updated[updated.length - 1] = { role: 'assistant', text: `Error: ${result.error || 'Failed to apply changes'}` }
+          updated[updated.length - 1] = { role: 'assistant', text: `Error: ${result.error || 'Failed'}`, rawStream: captured, done: true }
           return updated
         })
       }
     } catch (e: any) {
+      const captured = streamAccRef.current
       setMessages(prev => {
         const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', text: `Error: ${e.message}` }
+        updated[updated.length - 1] = { role: 'assistant', text: `Error: ${e.message}`, rawStream: captured, done: true }
         return updated
       })
     } finally {
@@ -671,9 +683,7 @@ function AIChatPanel({ cv, store, messages, setMessages }: { cv: any; store: Ret
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="px-4 py-3 border-b border-slate-800">
-        <div className="text-xs text-slate-400 leading-relaxed">
-          Ask AI to edit your CV. Examples:
-        </div>
+        <div className="text-xs text-slate-400 leading-relaxed">Ask AI to edit your CV:</div>
         <div className="mt-1.5 flex flex-wrap gap-1">
           {['Make summary shorter', 'Add Python to skills', 'Rewrite first job bullets'].map(s => (
             <button key={s} onClick={() => { setInput(s); inputRef.current?.focus() }}
@@ -682,6 +692,11 @@ function AIChatPanel({ cv, store, messages, setMessages }: { cv: any; store: Ret
             </button>
           ))}
         </div>
+        {store.customInstructions && (
+          <div className="mt-2 text-xs text-violet-400/70 bg-violet-500/10 border border-violet-500/20 rounded px-2 py-1">
+            Custom instructions active
+          </div>
+        )}
       </div>
 
       {/* Messages */}
@@ -693,19 +708,38 @@ function AIChatPanel({ cv, store, messages, setMessages }: { cv: any; store: Ret
           </div>
         )}
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} gap-1`}>
             <div className={`max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed ${
               msg.role === 'user'
                 ? 'bg-violet-600 text-white'
-                : 'bg-slate-800 text-slate-300 border border-slate-700'
+                : msg.done
+                  ? 'bg-slate-800 text-slate-300 border border-slate-700'
+                  : 'bg-slate-900 text-slate-300 border border-slate-700 font-mono'
             }`}>
-              {msg.text === '...' ? (
+              {msg.role === 'assistant' && !msg.done && !msg.text ? (
                 <div className="flex items-center gap-2">
-                  <Loader2 size={12} className="animate-spin" />
-                  <span className="text-slate-400">Applying changes...</span>
+                  <Loader2 size={12} className="animate-spin text-violet-400" />
+                  <span className="text-slate-500">Thinking...</span>
                 </div>
+              ) : msg.role === 'assistant' && !msg.done ? (
+                <div className="max-h-32 overflow-y-auto whitespace-pre-wrap break-all text-xs">{msg.text}</div>
               ) : msg.text}
             </div>
+            {/* Thinking toggle for completed assistant messages */}
+            {msg.role === 'assistant' && msg.done && msg.rawStream && msg.rawStream.length > 0 && (
+              <button
+                onClick={() => setExpandedThinking(expandedThinking === i ? null : i)}
+                className="text-xs text-slate-600 hover:text-violet-400 transition-colors flex items-center gap-1 ml-1"
+              >
+                <Terminal size={10} />
+                {expandedThinking === i ? 'Hide' : 'Show'} AI thinking ({(msg.rawStream.length / 1000).toFixed(1)}k chars)
+              </button>
+            )}
+            {expandedThinking === i && msg.rawStream && (
+              <div className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 max-h-64 overflow-y-auto">
+                <pre className="text-xs text-slate-500 font-mono whitespace-pre-wrap break-all leading-relaxed">{msg.rawStream}</pre>
+              </div>
+            )}
           </div>
         ))}
         <div ref={messagesEndRef} />

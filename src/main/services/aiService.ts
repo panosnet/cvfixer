@@ -108,7 +108,7 @@ function extractPositionHints(cvText: string): string[] {
 
 // ─── Prompt ───────────────────────────────────────────────────────────────────
 
-const CV_ANALYSIS_PROMPT = (cvText: string, jobDescription: string) => {
+export const CV_ANALYSIS_PROMPT = (cvText: string, jobDescription: string, customInstructions?: string) => {
   const positionHints = extractPositionHints(cvText)
   const positionCount = Math.max(positionHints.length, 1)
 
@@ -126,6 +126,18 @@ You are a world-class CV/resume writer and career coach. Your goal is to help th
 8. NEVER use these recruiter red-flag phrases: "results-driven", "passionate about", "proven track record", "dynamic professional", "detail-oriented", "spearheaded", "leveraged", "synergy", "thought leader"
 9. Every experience entry MUST correspond to a real job from the CV below
 10. Experience MUST be in REVERSE CHRONOLOGICAL ORDER (most recent first)
+
+═══ ANTI-HALLUCINATION — STRICTLY ENFORCED ═══
+LANGUAGES: Include ONLY languages the candidate EXPLICITLY states in the CV (e.g. "English: native", "French: B2").
+  - NEVER infer language from location, nationality, employer name, or job title
+  - NEVER add a language because the candidate worked in a country where that language is spoken
+  - If no languages are mentioned → languages array MUST be EMPTY []
+SKILLS: Copy ONLY skills and tools explicitly named in the CV. Do NOT infer tools from job roles.
+  - If the CV says "cybersecurity" but never mentions a specific tool, do not add tool names
+  - You may REORDER and REFORMAT skills for clarity — never ADD new ones
+CERTIFICATIONS: List ONLY certifications explicitly named with their full title in the CV
+EDUCATION: Copy exactly — do NOT upgrade degree levels or add institutions not mentioned
+SELF-CHECK before outputting: For every item in skills.languages, ask "Is this word or phrase literally present in the CV text?" If no → remove it.
 
 ═══ CRITICAL: PRESERVE ALL POSITIONS ═══
 I have detected approximately ${positionCount} positions/roles in this CV.
@@ -317,6 +329,7 @@ Return this exact JSON structure:
     "fonts": { "heading": "<one of: Playfair Display, Montserrat, Raleway, Lato, Source Serif 4, Inter, Roboto>", "body": "<one of: Inter, Lato, Open Sans, Roboto, Nunito, Source Sans 3>" }
   }
 }
+${customInstructions?.trim() ? `\n═══ CUSTOM USER INSTRUCTIONS — apply these on top of all rules above ═══\n${customInstructions.trim()}\n` : ''}
 `
 }
 
@@ -481,11 +494,12 @@ export async function analyzeCV(
   cvText: string,
   jobDescription: string,
   onStream?: (chunk: string) => void,
-  onUsage?: (usage: TokenUsage) => void
+  onUsage?: (usage: TokenUsage) => void,
+  customInstructions?: string
 ): Promise<CVAnalysisResult> {
   if (!cvText?.trim()) throw new Error('CV text is empty')
 
-  const prompt = CV_ANALYSIS_PROMPT(cvText, jobDescription)
+  const prompt = CV_ANALYSIS_PROMPT(cvText, jobDescription, customInstructions)
   let rawText = ''
 
   try {
@@ -573,12 +587,13 @@ export async function chatEditCV(
   config: AIConfig,
   cv: CVAnalysisResult['rewrittenCV'],
   userMessage: string,
-  onStream?: (chunk: string) => void
+  onStream?: (chunk: string) => void,
+  customInstructions?: string
 ): Promise<CVAnalysisResult['rewrittenCV']> {
   const prompt = `You are a CV editing assistant. The user wants to modify their CV.
 
 Current CV (JSON):
-${JSON.stringify(cv, null, 2)}
+${JSON.stringify(cv)}
 
 User request: "${userMessage}"
 
@@ -587,10 +602,11 @@ Apply the user's requested change to the CV JSON. Return ONLY the complete, modi
 RULES:
 1. Return ONLY valid JSON — no markdown, no code fences, no explanation
 2. Keep ALL existing fields and data unless the user specifically asks to change them
-3. Do not add fake achievements, numbers, or experience the user didn't ask for
+3. NEVER add languages, skills, certifications, or facts not already present in the CV — only add what the user explicitly requests
 4. If the user asks to add something, add it to the appropriate section
 5. If the user asks to remove something, remove only that specific item
 6. If unclear which field to modify, make a reasonable guess and include ALL data
+${customInstructions?.trim() ? `\nCustom user instructions: ${customInstructions.trim()}` : ''}
 
 Return the complete modified CV JSON now:`
 

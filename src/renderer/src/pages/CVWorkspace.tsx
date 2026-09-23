@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Upload, FileText, Briefcase, Wand2, AlertTriangle,
   ChevronRight, X, Loader2, TrendingUp, Target, Search,
   Link, Globe, Copy, Check, Lightbulb, ChevronDown, ChevronUp,
-  RefreshCw, Info, Eye, Zap, MessageSquare, Award
+  RefreshCw, Info, Eye, Zap, MessageSquare, Award, Terminal, Settings2, Trash2
 } from 'lucide-react'
 import { useStore } from '../store/appStore'
 
@@ -65,6 +65,12 @@ export default function CVWorkspace() {
   const [showAllImprovements, setShowAllImprovements] = useState(false)
   const [copied, setCopied] = useState(false)
   const [confirmReanalyze, setConfirmReanalyze] = useState(false)
+  const [showCustomInstructions, setShowCustomInstructions] = useState(false)
+  const [showPromptModal, setShowPromptModal] = useState(false)
+  const [promptText, setPromptText] = useState('')
+  const [activeTab, setActiveTab] = useState<'results' | 'log'>('results')
+  const [expandedLogId, setExpandedLogId] = useState<string | null>(null)
+  const streamRef = useRef('')
 
   async function handleFile(file: File) {
     if (!file) return
@@ -143,21 +149,42 @@ export default function CVWorkspace() {
     store.setIsAnalyzing(true)
     store.clearStream()
     store.startAnalysisTiming()
+    streamRef.current = ''
+    setActiveTab('results')
 
     let unsubStream: (() => void) | null = null
     let unsubUsage: (() => void) | null = null
 
-    unsubStream = window.api.ai.onStream((chunk) => store.appendStream(chunk))
+    unsubStream = window.api.ai.onStream((chunk) => {
+      store.appendStream(chunk)
+      streamRef.current += chunk
+    })
     unsubUsage = window.api.ai.onUsage((usage) => store.setTokenUsage(usage))
 
     try {
-      const response = await window.api.ai.analyzeCV(store.activeConfig, store.cvText, store.jobDescription)
+      const response = await window.api.ai.analyzeCV(
+        store.activeConfig, store.cvText, store.jobDescription, store.customInstructions || undefined
+      )
       if (!response.success || !response.result) {
         throw new Error(response.error || 'Analysis returned no result')
       }
       store.applyAnalysisResult(response.result)
+      store.addActivityLog({
+        timestamp: Date.now(),
+        type: 'analysis',
+        label: `Analysis — score ${response.result.score}/100`,
+        content: streamRef.current,
+        model: store.activeConfig?.model ?? '',
+      })
       store.addToast(`Analysis complete! Score: ${response.result.score}/100`, 'success')
     } catch (e: any) {
+      store.addActivityLog({
+        timestamp: Date.now(),
+        type: 'analysis',
+        label: `Analysis — failed`,
+        content: streamRef.current || '(no output)',
+        model: store.activeConfig?.model ?? '',
+      })
       store.addToast(`Analysis failed: ${e.message}`, 'error')
     } finally {
       store.setIsAnalyzing(false)
@@ -369,6 +396,48 @@ export default function CVWorkspace() {
             )}
           </div>
 
+          {/* Custom Instructions */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            <button
+              onClick={() => setShowCustomInstructions(v => !v)}
+              className="w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-slate-800/50 transition-colors"
+            >
+              <div className="flex items-center gap-2 text-slate-300 font-medium">
+                <Settings2 size={14} className="text-violet-400" />
+                Custom Instructions
+                {store.customInstructions && <span className="text-xs text-violet-400 bg-violet-500/15 border border-violet-500/25 px-1.5 py-0.5 rounded">active</span>}
+              </div>
+              {showCustomInstructions ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />}
+            </button>
+            {showCustomInstructions && (
+              <div className="px-4 pb-4 border-t border-slate-800">
+                <p className="text-xs text-slate-500 mt-3 mb-2">Extra instructions added to the AI prompt. Examples: "Focus on security certifications", "Keep tone formal", "Emphasise leadership over technical skills".</p>
+                <textarea
+                  value={store.customInstructions}
+                  onChange={(e) => store.setCustomInstructions(e.target.value)}
+                  placeholder="e.g. Emphasise cloud infrastructure experience over application development..."
+                  rows={3}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-slate-300 text-xs resize-none focus:outline-none focus:border-violet-500 placeholder-slate-600"
+                />
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    onClick={async () => {
+                      const p = await window.api.ai.getPrompt(store.cvText, store.jobDescription, store.customInstructions || undefined)
+                      setPromptText(p)
+                      setShowPromptModal(true)
+                    }}
+                    className="text-xs text-slate-400 hover:text-violet-400 border border-slate-700 hover:border-violet-500/40 rounded-lg px-3 py-1.5 transition-colors flex items-center gap-1.5"
+                  >
+                    <Eye size={11} /> View Full Prompt
+                  </button>
+                  {store.customInstructions && (
+                    <button onClick={() => store.setCustomInstructions('')} className="text-xs text-slate-500 hover:text-red-400 transition-colors">Clear</button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Confirm re-analyze banner */}
           {confirmReanalyze && (
             <div className="flex items-center gap-2 p-3 bg-amber-900/40 border border-amber-700/50 rounded-xl text-sm text-amber-200">
@@ -392,11 +461,85 @@ export default function CVWorkspace() {
               <><Wand2 size={17} /> Analyze & Rewrite CV</>
             )}
           </button>
+
+          {/* Prompt Modal */}
+          {showPromptModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowPromptModal(false)}>
+              <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[800px] max-h-[80vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+                  <div className="flex items-center gap-2 text-white font-semibold"><Terminal size={15} className="text-violet-400" /> Full AI Prompt</div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => { navigator.clipboard.writeText(promptText) }} className="text-xs text-slate-400 hover:text-white border border-slate-700 rounded-lg px-3 py-1.5 transition-colors flex items-center gap-1.5"><Copy size={11} /> Copy</button>
+                    <button onClick={() => setShowPromptModal(false)} className="text-slate-500 hover:text-white transition-colors"><X size={18} /></button>
+                  </div>
+                </div>
+                <textarea
+                  readOnly
+                  value={promptText}
+                  className="flex-1 bg-slate-950 text-slate-300 text-xs font-mono p-5 resize-none focus:outline-none leading-relaxed overflow-y-auto rounded-b-2xl"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Right: Results */}
+        {/* Right: Results + AI Log */}
         <div className="flex flex-col gap-4 overflow-y-auto">
-          {store.isAnalyzing && (
+
+          {/* Tab bar — only show when there's something to show */}
+          {(store.isAnalyzing || result || store.aiActivityLog.length > 0) && (
+            <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 shrink-0">
+              <button onClick={() => setActiveTab('results')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === 'results' ? 'bg-violet-600 text-white' : 'text-slate-400 hover:text-white'}`}>
+                <TrendingUp size={12} /> Results
+              </button>
+              <button onClick={() => setActiveTab('log')} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === 'log' ? 'bg-violet-600 text-white' : 'text-slate-400 hover:text-white'}`}>
+                <Terminal size={12} /> AI Log {store.aiActivityLog.length > 0 && <span className="bg-slate-700 text-slate-300 rounded-full px-1.5">{store.aiActivityLog.length}</span>}
+              </button>
+            </div>
+          )}
+
+          {/* AI Log Panel */}
+          {activeTab === 'log' && (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-slate-500">{store.aiActivityLog.length} entries — most recent first</div>
+                {store.aiActivityLog.length > 0 && (
+                  <button onClick={() => store.clearActivityLog()} className="text-xs text-slate-500 hover:text-red-400 flex items-center gap-1 transition-colors"><Trash2 size={11} /> Clear</button>
+                )}
+              </div>
+              {store.aiActivityLog.length === 0 && (
+                <div className="text-center py-12 text-slate-600 text-sm">No AI activity yet. Run an analysis to see the output here.</div>
+              )}
+              {store.aiActivityLog.map(entry => (
+                <div key={entry.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => setExpandedLogId(expandedLogId === entry.id ? null : entry.id)}
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Terminal size={13} className={entry.type === 'analysis' ? 'text-violet-400 shrink-0' : 'text-emerald-400 shrink-0'} />
+                      <span className="text-white text-xs font-medium truncate">{entry.label}</span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 ml-2">
+                      <span className="text-slate-500 text-xs">{entry.model}</span>
+                      <span className="text-slate-600 text-xs">{new Date(entry.timestamp).toLocaleTimeString()}</span>
+                      {expandedLogId === entry.id ? <ChevronUp size={13} className="text-slate-500" /> : <ChevronDown size={13} className="text-slate-500" />}
+                    </div>
+                  </button>
+                  {expandedLogId === entry.id && (
+                    <div className="border-t border-slate-800">
+                      <div className="flex justify-end px-4 py-2 border-b border-slate-800">
+                        <button onClick={() => navigator.clipboard.writeText(entry.content)} className="text-xs text-slate-500 hover:text-white flex items-center gap-1 transition-colors"><Copy size={11} /> Copy raw</button>
+                      </div>
+                      <pre className="p-4 text-xs text-slate-400 font-mono leading-relaxed overflow-x-auto max-h-96 overflow-y-auto whitespace-pre-wrap break-all">{entry.content}</pre>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'results' && store.isAnalyzing && (
             <AnalysisPanel
               status={streamStatus}
               progress={streamProgress}
@@ -408,7 +551,7 @@ export default function CVWorkspace() {
             />
           )}
 
-          {result && !store.isAnalyzing && (
+          {activeTab === 'results' && result && !store.isAnalyzing && (
             <>
               {/* Integrity warnings — shown prominently when AI dropped sections */}
               {result._integrityWarnings && result._integrityWarnings.length > 0 && (

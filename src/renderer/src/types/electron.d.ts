@@ -32,7 +32,8 @@ interface TokenUsage {
 }
 
 interface AIAPI {
-  analyzeCV: (config: ModelConfig, cvText: string, jobDescription: string) => Promise<{
+  getPrompt: (cvText: string, jobDescription: string, customInstructions?: string) => Promise<string>
+  analyzeCV: (config: ModelConfig, cvText: string, jobDescription: string, customInstructions?: string) => Promise<{
     success: boolean
     result?: CVAnalysisResult
     error?: string
@@ -41,7 +42,7 @@ interface AIAPI {
   onUsage: (cb: (usage: TokenUsage) => void) => () => void
   generateCoverLetter: (config: ModelConfig, cv: unknown, jobDescription: string, tone: 'professional' | 'conversational') => Promise<{ success: boolean; text?: string; error?: string }>
   onCoverLetterStream: (cb: (chunk: string) => void) => () => void
-  chatEditCV: (config: ModelConfig, cv: unknown, message: string) => Promise<{ success: boolean; cv?: import('./index').RewrittenCV; error?: string }>
+  chatEditCV: (config: ModelConfig, cv: unknown, message: string, customInstructions?: string) => Promise<{ success: boolean; cv?: import('./index').RewrittenCV; error?: string }>
   onChatStream: (cb: (chunk: string) => void) => () => void
 }
 

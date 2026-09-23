@@ -28,8 +28,10 @@ contextBridge.exposeInMainWorld('api', {
     fetchURL: (url: string) => ipcRenderer.invoke('files:fetchURL', url),
   },
   ai: {
-    analyzeCV: (config: unknown, cvText: string, jobDescription: string) =>
-      ipcRenderer.invoke('ai:analyzeCV', config, cvText, jobDescription),
+    getPrompt: (cvText: string, jobDescription: string, customInstructions?: string) =>
+      ipcRenderer.invoke('ai:getPrompt', cvText, jobDescription, customInstructions),
+    analyzeCV: (config: unknown, cvText: string, jobDescription: string, customInstructions?: string) =>
+      ipcRenderer.invoke('ai:analyzeCV', config, cvText, jobDescription, customInstructions),
     onStream: (cb: (chunk: string) => void) => {
       const handler = (_e: Electron.IpcRendererEvent, chunk: string) => cb(chunk)
       ipcRenderer.on('ai:stream', handler)
@@ -47,8 +49,8 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.on('ai:coverLetterStream', handler)
       return () => ipcRenderer.removeListener('ai:coverLetterStream', handler)
     },
-    chatEditCV: (config: unknown, cv: unknown, message: string) =>
-      ipcRenderer.invoke('ai:chatEditCV', config, cv, message),
+    chatEditCV: (config: unknown, cv: unknown, message: string, customInstructions?: string) =>
+      ipcRenderer.invoke('ai:chatEditCV', config, cv, message, customInstructions),
     onChatStream: (cb: (chunk: string) => void) => {
       const handler = (_e: Electron.IpcRendererEvent, chunk: string) => cb(chunk)
       ipcRenderer.on('ai:chatStream', handler)
