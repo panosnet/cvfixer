@@ -60,7 +60,7 @@ function saveSession(s: AppState) {
   } catch {}
   try {
     const logJson = JSON.stringify(s.aiActivityLog)
-    if (logJson.length < 2_000_000) localStorage.setItem('cvfixer_activityLog', logJson)
+    if (logJson.length < 400_000) localStorage.setItem('cvfixer_activityLog', logJson)
   } catch {}
   try {
     if (s.analysisResult) {
@@ -134,6 +134,7 @@ function getInitialKeys() {
 const savedKeys = getInitialKeys()
 const persisted = loadSession()
 let toastCounter = 0
+let activityCounter = 0
 
 let state: AppState = {
   page: 'welcome',
@@ -220,9 +221,7 @@ export const actions = {
   setIsAnalyzing: (isAnalyzing: boolean) => updateTransient({ isAnalyzing }),
 
   appendStream: (chunk: string) => {
-    const current = state.streamBuffer
-    const next = current.length > 8000 ? current.slice(-4000) + chunk : current + chunk
-    updateTransient({ streamBuffer: next })
+    updateTransient({ streamBuffer: state.streamBuffer + chunk })
   },
 
   clearStream: () => updateTransient({ streamBuffer: '' }),
@@ -378,13 +377,18 @@ export const actions = {
 
   markPdfExported: () => update({ pdfExported: true }),
 
-  setCustomInstructions: (customInstructions: string) => update({ customInstructions }),
+  setCustomInstructions: (customInstructions: string) =>
+    update({ customInstructions: customInstructions.slice(0, 2000).replace(/[═]/g, '-') }),
 
   addActivityLog: (entry: Omit<ActivityLogEntry, 'id'>) => {
-    const id = String(Date.now())
-    const newEntry: ActivityLogEntry = { ...entry, id }
-    const log = [newEntry, ...state.aiActivityLog].slice(0, 50)
-    update({ aiActivityLog: log })
+    const id = String(++activityCounter)
+    const newEntry: ActivityLogEntry = { ...entry, content: entry.content.slice(0, 200_000) }
+    Object.assign(newEntry, { id })
+    // Budget-aware eviction: keep dropping oldest until total log is under ~400KB
+    let log = [newEntry, ...state.aiActivityLog]
+    while (log.length > 1 && JSON.stringify(log).length > 400_000) log.pop()
+    if (log.length > 50) log = log.slice(0, 50)
+    updateDebounced({ aiActivityLog: log })
   },
 
   clearActivityLog: () => update({ aiActivityLog: [] }),
@@ -408,26 +412,13 @@ export const actions = {
   },
 
   clearSession: () => {
-    localStorage.removeItem('cvfixer_session')
-    localStorage.removeItem('cvfixer_result')
-    localStorage.removeItem('cvfixer_editedCV')
-    localStorage.removeItem('cvfixer_editedDesign')
-    localStorage.removeItem('cvfixer_activityLog')
-    state = { ...state,
-      page: 'workspace',
-      cvText: '',
-      cvFileName: '',
-      jobDescription: '',
-      analysisResult: null,
-      currentCV: null,
-      design: null,
-      streamBuffer: '',
-      templateOverridden: false,
-      pdfExported: false,
-      selectedTemplate: 'modern',
-    }
-    saveSession(state)
-    notify()
+    ;['cvfixer_session','cvfixer_result','cvfixer_editedCV','cvfixer_editedDesign','cvfixer_activityLog']
+      .forEach(k => localStorage.removeItem(k))
+    update({
+      page: 'workspace', cvText: '', cvFileName: '', jobDescription: '',
+      analysisResult: null, currentCV: null, design: null, streamBuffer: '',
+      templateOverridden: false, pdfExported: false, selectedTemplate: 'modern',
+    })
   },
 }
 

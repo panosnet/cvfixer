@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Upload, FileText, Briefcase, Wand2, AlertTriangle,
   ChevronRight, X, Loader2, TrendingUp, Target, Search,
@@ -66,11 +66,9 @@ export default function CVWorkspace() {
   const [copied, setCopied] = useState(false)
   const [confirmReanalyze, setConfirmReanalyze] = useState(false)
   const [showCustomInstructions, setShowCustomInstructions] = useState(false)
-  const [showPromptModal, setShowPromptModal] = useState(false)
-  const [promptText, setPromptText] = useState('')
+  const [promptModal, setPromptModal] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'results' | 'log'>('results')
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null)
-  const streamRef = useRef('')
 
   async function handleFile(file: File) {
     if (!file) return
@@ -149,16 +147,15 @@ export default function CVWorkspace() {
     store.setIsAnalyzing(true)
     store.clearStream()
     store.startAnalysisTiming()
-    streamRef.current = ''
     setActiveTab('results')
+
+    const logAnalysis = (label: string) =>
+      store.addActivityLog({ timestamp: Date.now(), type: 'analysis', label, content: store.streamBuffer, model: store.activeConfig?.model ?? '' })
 
     let unsubStream: (() => void) | null = null
     let unsubUsage: (() => void) | null = null
 
-    unsubStream = window.api.ai.onStream((chunk) => {
-      store.appendStream(chunk)
-      streamRef.current += chunk
-    })
+    unsubStream = window.api.ai.onStream((chunk) => store.appendStream(chunk))
     unsubUsage = window.api.ai.onUsage((usage) => store.setTokenUsage(usage))
 
     try {
@@ -169,22 +166,10 @@ export default function CVWorkspace() {
         throw new Error(response.error || 'Analysis returned no result')
       }
       store.applyAnalysisResult(response.result)
-      store.addActivityLog({
-        timestamp: Date.now(),
-        type: 'analysis',
-        label: `Analysis — score ${response.result.score}/100`,
-        content: streamRef.current,
-        model: store.activeConfig?.model ?? '',
-      })
+      logAnalysis(`Analysis — score ${response.result.score}/100`)
       store.addToast(`Analysis complete! Score: ${response.result.score}/100`, 'success')
     } catch (e: any) {
-      store.addActivityLog({
-        timestamp: Date.now(),
-        type: 'analysis',
-        label: `Analysis — failed`,
-        content: streamRef.current || '(no output)',
-        model: store.activeConfig?.model ?? '',
-      })
+      logAnalysis('Analysis — failed')
       store.addToast(`Analysis failed: ${e.message}`, 'error')
     } finally {
       store.setIsAnalyzing(false)
@@ -423,8 +408,7 @@ export default function CVWorkspace() {
                   <button
                     onClick={async () => {
                       const p = await window.api.ai.getPrompt(store.cvText, store.jobDescription, store.customInstructions || undefined)
-                      setPromptText(p)
-                      setShowPromptModal(true)
+                      setPromptModal(p)
                     }}
                     className="text-xs text-slate-400 hover:text-violet-400 border border-slate-700 hover:border-violet-500/40 rounded-lg px-3 py-1.5 transition-colors flex items-center gap-1.5"
                   >
@@ -463,21 +447,17 @@ export default function CVWorkspace() {
           </button>
 
           {/* Prompt Modal */}
-          {showPromptModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowPromptModal(false)}>
+          {promptModal !== null && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setPromptModal(null)}>
               <div className="bg-slate-900 border border-slate-700 rounded-2xl w-[800px] max-h-[80vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
                   <div className="flex items-center gap-2 text-white font-semibold"><Terminal size={15} className="text-violet-400" /> Full AI Prompt</div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => { navigator.clipboard.writeText(promptText) }} className="text-xs text-slate-400 hover:text-white border border-slate-700 rounded-lg px-3 py-1.5 transition-colors flex items-center gap-1.5"><Copy size={11} /> Copy</button>
-                    <button onClick={() => setShowPromptModal(false)} className="text-slate-500 hover:text-white transition-colors"><X size={18} /></button>
+                    <button onClick={() => navigator.clipboard.writeText(promptModal)} className="text-xs text-slate-400 hover:text-white border border-slate-700 rounded-lg px-3 py-1.5 transition-colors flex items-center gap-1.5"><Copy size={11} /> Copy</button>
+                    <button onClick={() => setPromptModal(null)} className="text-slate-500 hover:text-white transition-colors"><X size={18} /></button>
                   </div>
                 </div>
-                <textarea
-                  readOnly
-                  value={promptText}
-                  className="flex-1 bg-slate-950 text-slate-300 text-xs font-mono p-5 resize-none focus:outline-none leading-relaxed overflow-y-auto rounded-b-2xl"
-                />
+                <textarea readOnly value={promptModal} className="flex-1 bg-slate-950 text-slate-300 text-xs font-mono p-5 resize-none focus:outline-none leading-relaxed overflow-y-auto rounded-b-2xl" />
               </div>
             </div>
           )}

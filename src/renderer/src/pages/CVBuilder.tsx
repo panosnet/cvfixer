@@ -611,11 +611,10 @@ function AIChatPanel({ cv, store, messages, setMessages }: { cv: any; store: Ret
   const [expandedThinking, setExpandedThinking] = useState<number | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
-  const streamAccRef = useRef('')
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages.length])
 
   async function handleSend() {
     const msg = input.trim()
@@ -624,17 +623,16 @@ function AIChatPanel({ cv, store, messages, setMessages }: { cv: any; store: Ret
     setInput('')
     setMessages(prev => [...prev, { role: 'user', text: msg, done: true }])
     setSending(true)
-    streamAccRef.current = ''
 
     setMessages(prev => [...prev, { role: 'assistant', text: '', rawStream: '', done: false }])
 
     const unsubStream = window.api.ai.onChatStream((chunk) => {
-      streamAccRef.current += chunk
       setMessages(prev => {
         const updated = [...prev]
         const last = updated[updated.length - 1]
         if (last?.role === 'assistant' && !last.done) {
-          updated[updated.length - 1] = { ...last, rawStream: streamAccRef.current, text: streamAccRef.current }
+          const next = (last.rawStream ?? '') + chunk
+          updated[updated.length - 1] = { ...last, rawStream: next, text: next }
         }
         return updated
       })
@@ -644,16 +642,12 @@ function AIChatPanel({ cv, store, messages, setMessages }: { cv: any; store: Ret
       const result = await window.api.ai.chatEditCV(
         store.activeConfig, cv, msg, store.customInstructions || undefined
       )
-      const captured = streamAccRef.current
       if (result.success && result.cv) {
         store.updateCurrentCV(result.cv)
-        store.addActivityLog({
-          timestamp: Date.now(), type: 'chat',
-          label: `Chat: "${msg.slice(0, 60)}${msg.length > 60 ? '…' : ''}"`,
-          content: captured, model: store.activeConfig?.model ?? '',
-        })
         setMessages(prev => {
           const updated = [...prev]
+          const captured = updated[updated.length - 1]?.rawStream ?? ''
+          store.addActivityLog({ timestamp: Date.now(), type: 'chat', label: `Chat: "${msg.slice(0, 60)}${msg.length > 60 ? '…' : ''}"`, content: captured, model: store.activeConfig?.model ?? '' })
           updated[updated.length - 1] = { role: 'assistant', text: 'Done — CV updated.', rawStream: captured, done: true }
           return updated
         })
@@ -661,15 +655,14 @@ function AIChatPanel({ cv, store, messages, setMessages }: { cv: any; store: Ret
       } else {
         setMessages(prev => {
           const updated = [...prev]
-          updated[updated.length - 1] = { role: 'assistant', text: `Error: ${result.error || 'Failed'}`, rawStream: captured, done: true }
+          updated[updated.length - 1] = { ...updated[updated.length - 1], text: `Error: ${result.error || 'Failed'}`, done: true }
           return updated
         })
       }
     } catch (e: any) {
-      const captured = streamAccRef.current
       setMessages(prev => {
         const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', text: `Error: ${e.message}`, rawStream: captured, done: true }
+        updated[updated.length - 1] = { ...updated[updated.length - 1], text: `Error: ${e.message}`, done: true }
         return updated
       })
     } finally {
