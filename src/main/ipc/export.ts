@@ -70,8 +70,10 @@ export function registerExportHandlers(ipcMain: IpcMain): void {
 
     // Extract the background color from the template root element's inline style
     // Chromium serializes hex colors as rgb() in innerHTML, so handle both formats
-    const bgMatch = htmlContent.match(/background:\s*((?:rgba?\([^)]+\))|(?:#[0-9a-fA-F]{3,8})|(?:[^;,"]+))/)
-    const bgColor = bgMatch ? bgMatch[1].trim() : '#ffffff'
+    const bgMatch = htmlContent.match(/background:\s*((?:rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(?:\s*,\s*[\d.]+)?\s*\))|(?:#[0-9a-fA-F]{3,8}))/)
+    // Only accept validated hex or rgb() — default to white if anything else matches
+    const rawBg = bgMatch ? bgMatch[1].trim() : '#ffffff'
+    const bgColor = /^(#[0-9a-fA-F]{3,8}|rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(?:\s*,\s*[\d.]+)?\s*\))$/.test(rawBg) ? rawBg : '#ffffff'
 
     const htmlPage = `<!DOCTYPE html>
 <html>

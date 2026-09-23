@@ -89,10 +89,17 @@ export async function listInstalledModels(): Promise<OllamaModel[]> {
   return resp.data.models || []
 }
 
+function validateModelName(name: string): void {
+  if (!name || !/^[a-zA-Z0-9._:/-]{1,200}$/.test(name)) {
+    throw new Error(`Invalid model name: ${name}`)
+  }
+}
+
 export async function pullModel(
   modelName: string,
   onProgress: (progress: { status: string; percent: number }) => void
 ): Promise<void> {
+  validateModelName(modelName)
   const response = await fetch(`${OLLAMA_BASE}/api/pull`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -124,6 +131,7 @@ export async function pullModel(
 }
 
 export async function deleteModel(modelName: string): Promise<void> {
+  validateModelName(modelName)
   await axios.delete(`${OLLAMA_BASE}/api/delete`, {
     data: { name: modelName },
   })

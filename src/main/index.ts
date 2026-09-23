@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, session } from 'electron'
 import { join } from 'path'
 import { registerOllamaHandlers } from './ipc/ollama'
 import { registerFileHandlers } from './ipc/files'
@@ -35,6 +35,29 @@ function createWindow(): BrowserWindow {
 }
 
 app.whenReady().then(() => {
+  // Content Security Policy — applied only in production (dev needs HMR websockets)
+  if (!process.env['ELECTRON_RENDERER_URL']) {
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Content-Security-Policy': [
+            [
+              "default-src 'self' 'unsafe-inline'",
+              "script-src 'self' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "img-src 'self' data: blob:",
+              "connect-src 'self' http://localhost:11434 https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com",
+              "frame-src 'none'",
+              "object-src 'none'",
+            ].join('; '),
+          ],
+        },
+      })
+    })
+  }
+
   createWindow()
 
   registerSystemHandlers(ipcMain)
