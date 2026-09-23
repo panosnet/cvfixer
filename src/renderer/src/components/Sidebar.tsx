@@ -1,4 +1,5 @@
-import { FileText, Cpu, Key, Wand2, Layout, CheckCircle, Circle, AlertCircle } from 'lucide-react'
+import { useState } from 'react'
+import { FileText, Cpu, Key, Wand2, Layout, CheckCircle, Circle, AlertCircle, RotateCcw } from 'lucide-react'
 import { useStore } from '../store/appStore'
 
 const nav = [
@@ -11,6 +12,7 @@ const nav = [
 
 export default function Sidebar() {
   const store = useStore()
+  const [confirmReset, setConfirmReset] = useState(false)
 
   function getStatus(id: string) {
     if (id === 'models') {
@@ -56,7 +58,7 @@ export default function Sidebar() {
           return (
             <button
               key={id}
-              onClick={() => store.setPage(id)}
+              onClick={() => { store.setPage(id); setConfirmReset(false) }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
                 active
                   ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/50'
@@ -79,6 +81,34 @@ export default function Sidebar() {
           <div className="text-xs text-slate-500 mb-1">Active Model</div>
           <div className="text-xs text-white font-medium truncate">{store.activeConfig.model}</div>
           <div className="text-xs text-slate-500 mt-0.5 capitalize">{store.activeConfig.provider}</div>
+        </div>
+      )}
+
+      {/* Start Over */}
+      {(store.cvText || store.analysisResult) && (
+        <div className="mx-2 mt-2">
+          {confirmReset ? (
+            <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <div className="text-xs text-red-300 mb-2">Clear CV, analysis, and edits?</div>
+              <div className="flex gap-1.5">
+                <button onClick={() => { store.clearSession(); setConfirmReset(false) }}
+                  className="flex-1 px-2 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs rounded font-medium transition-colors">
+                  Clear
+                </button>
+                <button onClick={() => setConfirmReset(false)}
+                  className="flex-1 px-2 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-xs rounded font-medium transition-colors">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmReset(true)}
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs text-slate-500 hover:text-red-400 hover:bg-red-500/5 border border-slate-800 hover:border-red-500/20 rounded-lg transition-colors"
+            >
+              <RotateCcw size={12} /> Start Over
+            </button>
+          )}
         </div>
       )}
     </aside>

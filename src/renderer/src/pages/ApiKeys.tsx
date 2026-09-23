@@ -18,7 +18,7 @@ const providers: Array<{
     emoji: '🟣',
     placeholder: 'sk-ant-api03-...',
     hint: 'console.anthropic.com → API Keys',
-    models: ['claude-sonnet-4-5', 'claude-opus-4-5'],
+    models: ['claude-sonnet-5', 'claude-opus-5'],
     recommended: true,
   },
   {
@@ -36,7 +36,7 @@ const providers: Array<{
     emoji: '🔵',
     placeholder: 'AIzaSy...',
     hint: 'aistudio.google.com → Get API Key',
-    models: ['gemini-1.5-pro'],
+    models: ['gemini-2.0-pro'],
     recommended: false,
   },
 ]
@@ -77,6 +77,7 @@ export default function ApiKeys() {
 
   function handleClear(id: ProviderKey) {
     setDrafts((prev) => ({ ...prev, [id]: '' }))
+    setFormatWarning((prev) => ({ ...prev, [id]: '' }))
     store.setApiKey(id, '')
   }
 

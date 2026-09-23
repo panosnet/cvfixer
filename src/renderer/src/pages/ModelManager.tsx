@@ -83,8 +83,8 @@ const OLLAMA_MODELS: OllamaModelDef[] = [
 const PAID_MODELS: PaidModelDef[] = [
   {
     provider: 'anthropic',
-    id: 'claude-sonnet-4-5',
-    name: 'Claude Sonnet 4.5',
+    id: 'claude-sonnet-5',
+    name: 'Claude Sonnet 5',
     description: 'Best overall CV fixer. Exceptional at professional writing, tone, ATS optimization, and tailoring to job requirements. Recommended for best results.',
     costInfo: '$3 / $15 per M tokens',
     quality: 'Exceptional',
@@ -93,8 +93,8 @@ const PAID_MODELS: PaidModelDef[] = [
   },
   {
     provider: 'anthropic',
-    id: 'claude-opus-4-5',
-    name: 'Claude Opus 4.5',
+    id: 'claude-opus-5',
+    name: 'Claude Opus 5',
     description: 'Most capable Claude model. Best for complex CV transformations, executive-level CVs, and senior leadership roles.',
     costInfo: '$15 / $75 per M tokens',
     quality: 'Best',
@@ -123,8 +123,8 @@ const PAID_MODELS: PaidModelDef[] = [
   },
   {
     provider: 'google',
-    id: 'gemini-1.5-pro',
-    name: 'Gemini 1.5 Pro',
+    id: 'gemini-2.0-pro',
+    name: 'Gemini 2.0 Pro',
     description: "Google's flagship. Strong multilingual support, long context window.",
     costInfo: '$1.25 / $5 per M tokens',
     quality: 'Excellent',

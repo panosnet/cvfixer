@@ -99,13 +99,19 @@ export async function pullModel(
     body: JSON.stringify({ name: modelName, stream: true }),
   })
 
-  const reader = response.body!.getReader()
+  if (!response.ok) {
+    const errBody = await response.text().catch(() => '')
+    throw new Error(`Ollama pull failed (${response.status}): ${errBody.slice(0, 200)}`)
+  }
+  if (!response.body) throw new Error('No response body from Ollama')
+
+  const reader = response.body.getReader()
   const decoder = new TextDecoder()
 
   while (true) {
     const { done, value } = await reader.read()
     if (done) break
-    const lines = decoder.decode(value).split('\n').filter(Boolean)
+    const lines = decoder.decode(value, { stream: true }).split('\n').filter(Boolean)
     for (const line of lines) {
       try {
         const data = JSON.parse(line)

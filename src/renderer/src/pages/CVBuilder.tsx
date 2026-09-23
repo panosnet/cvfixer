@@ -349,8 +349,8 @@ export default function CVBuilder() {
         </div>
 
         <div className="flex-1 overflow-auto p-8">
-          <div className="max-w-[794px] mx-auto">
-            <div style={{ transformOrigin: 'top center', transform: `scale(${zoom})`, width: '100%' }}>
+          <div className="mx-auto" style={{ width: 794, minHeight: 1123 * zoom }}>
+            <div style={{ transformOrigin: 'top center', transform: `scale(${zoom})`, width: 794 }}>
               <div className="shadow-2xl shadow-black/50 rounded-sm overflow-hidden">
                 <div ref={previewRef}>
                   <Component cv={cv} design={design} />
@@ -466,6 +466,17 @@ function ContentEditor({ cv, store }: { cv: any; store: ReturnType<typeof useSto
         </button>
       </section>
 
+      {/* Core Competencies */}
+      <section>
+        <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">Core Competencies</div>
+        <SkillsField
+          label=""
+          values={cv.coreCompetencies ?? []}
+          onChange={(v) => store.updateCurrentCV({ coreCompetencies: v })}
+          placeholder="Add competency..."
+        />
+      </section>
+
       {/* Certifications */}
       <section>
         <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">Certifications</div>
@@ -474,6 +485,39 @@ function ContentEditor({ cv, store }: { cv: any; store: ReturnType<typeof useSto
           values={cv.certifications ?? []}
           onChange={(v) => store.updateCertifications(v)}
           placeholder="Add certification..."
+        />
+      </section>
+
+      {/* Achievements */}
+      <section>
+        <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">Achievements</div>
+        <SkillsField
+          label=""
+          values={cv.achievements ?? []}
+          onChange={(v) => store.updateCurrentCV({ achievements: v })}
+          placeholder="Add achievement..."
+        />
+      </section>
+
+      {/* Publications */}
+      <section>
+        <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">Publications</div>
+        <SkillsField
+          label=""
+          values={cv.publications ?? []}
+          onChange={(v) => store.updateCurrentCV({ publications: v })}
+          placeholder="Add publication..."
+        />
+      </section>
+
+      {/* Volunteer */}
+      <section>
+        <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">Volunteer</div>
+        <SkillsField
+          label=""
+          values={cv.volunteer ?? []}
+          onChange={(v) => store.updateCurrentCV({ volunteer: v })}
+          placeholder="Add volunteer experience..."
         />
       </section>
 

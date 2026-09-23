@@ -378,7 +378,8 @@ export const actions = {
     localStorage.removeItem('cvfixer_result')
     localStorage.removeItem('cvfixer_editedCV')
     localStorage.removeItem('cvfixer_editedDesign')
-    update({
+    state = { ...state,
+      page: 'workspace',
       cvText: '',
       cvFileName: '',
       jobDescription: '',
@@ -389,7 +390,9 @@ export const actions = {
       templateOverridden: false,
       pdfExported: false,
       selectedTemplate: 'modern',
-    })
+    }
+    saveSession(state)
+    notify()
   },
 }
 

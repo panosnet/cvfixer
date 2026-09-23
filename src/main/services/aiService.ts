@@ -314,7 +314,7 @@ Return this exact JSON structure:
       "text": "<dark 6-digit hex, always dark like #1a1a2e or #333333 — NEVER light/white>",
       "background": "#ffffff"
     },
-    "fonts": { "heading": "<font from allowed list>", "body": "<font from allowed list>" }
+    "fonts": { "heading": "<one of: Playfair Display, Montserrat, Raleway, Lato, Source Serif 4, Inter, Roboto>", "body": "<one of: Inter, Lato, Open Sans, Roboto, Nunito, Source Sans 3>" }
   }
 }
 `
@@ -328,10 +328,13 @@ function validateResult(result: unknown, originalCvText?: string): CVAnalysisRes
 
   // Top-level defaults
   if (typeof r.score !== 'number') r.score = 50
+  r.score = Math.max(0, Math.min(100, r.score))
   if (typeof r.atsScore !== 'number') r.atsScore = 50
+  r.atsScore = Math.max(0, Math.min(100, r.atsScore))
   if (!r.scoreBreakdown) r.scoreBreakdown = { quantification: 50, keywords: 50, summary: 50, format: 50, completeness: 50 }
   for (const k of ['quantification', 'keywords', 'summary', 'format', 'completeness'] as const) {
     if (typeof r.scoreBreakdown[k] !== 'number') r.scoreBreakdown[k] = 50
+    r.scoreBreakdown[k] = Math.max(0, Math.min(100, r.scoreBreakdown[k]))
   }
   if (!r.topStrength) r.topStrength = ''
   if (!r.topWeakness) r.topWeakness = ''
@@ -369,7 +372,19 @@ function validateResult(result: unknown, originalCvText?: string): CVAnalysisRes
   if (!Array.isArray(cv.volunteer)) cv.volunteer = []
   if (!Array.isArray(cv.projects)) cv.projects = []
   for (const exp of cv.experience) {
+    if (!exp.title) exp.title = ''
+    if (!exp.company) exp.company = ''
+    if (!exp.location) exp.location = ''
+    if (!exp.startDate) exp.startDate = ''
+    if (!exp.endDate) exp.endDate = ''
     if (!Array.isArray(exp.bullets)) exp.bullets = []
+  }
+  for (const edu of cv.education) {
+    if (!edu.degree) edu.degree = ''
+    if (!edu.institution) edu.institution = ''
+    if (!edu.location) edu.location = ''
+    if (!edu.year) edu.year = ''
+    if (!edu.details) edu.details = ''
   }
   if (!r.design) {
     r.design = {
@@ -379,6 +394,15 @@ function validateResult(result: unknown, originalCvText?: string): CVAnalysisRes
       fonts: { heading: 'Montserrat', body: 'Inter' },
     }
   }
+
+  const validTemplates = ['classic', 'modern', 'minimal', 'creative', 'executive']
+  if (!validTemplates.includes(r.design.template)) r.design.template = 'classic'
+
+  const validHeadingFonts = ['Playfair Display', 'Montserrat', 'Raleway', 'Lato', 'Source Serif 4', 'Inter', 'Roboto']
+  const validBodyFonts = ['Inter', 'Lato', 'Open Sans', 'Roboto', 'Nunito', 'Source Sans 3']
+  if (!r.design.fonts) r.design.fonts = { heading: 'Montserrat', body: 'Inter' }
+  if (!validHeadingFonts.includes(r.design.fonts.heading)) r.design.fonts.heading = 'Montserrat'
+  if (!validBodyFonts.includes(r.design.fonts.body)) r.design.fonts.body = 'Inter'
 
   const dc = r.design.colors
   if (dc) {
@@ -630,6 +654,7 @@ async function runAnthropic(
   const stream = client.messages.stream({
     model: config.model,
     max_tokens: 16000,
+    temperature: 0.3,
     messages: [{ role: 'user', content: prompt }],
   })
 
@@ -664,6 +689,7 @@ async function runOpenAI(
   const stream = await client.chat.completions.create({
     model: config.model,
     ...(isO1O3 ? { max_completion_tokens: 16384 } : { max_tokens: 16384 }),
+    ...(isO1O3 ? {} : { temperature: 0.3 }),
     messages: [{ role: 'user', content: prompt }],
     stream: true,
     stream_options: { include_usage: true },
@@ -730,6 +756,7 @@ async function runOllama(
       stream: true,
       options: {
         num_predict: 16384,
+        temperature: 0.3,
       },
     }),
   })
@@ -817,6 +844,9 @@ function parseJSON(raw: string): unknown {
     if (inString) candidate += '"'
     candidate += '}'.repeat(Math.max(1, depth))
   }
+
+  // Strip trailing commas (common AI output error)
+  candidate = candidate.replace(/,\s*([\]}])/g, '$1')
 
   try {
     return JSON.parse(candidate)
