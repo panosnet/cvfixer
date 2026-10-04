@@ -59,7 +59,7 @@ contextBridge.exposeInMainWorld('api', {
   },
   export: {
     pdf: (html: string, candidateName?: string) => ipcRenderer.invoke('export:pdf', html, candidateName),
-    docx: (cvJson: string, candidateName?: string) => ipcRenderer.invoke('export:docx', cvJson, candidateName),
+    docx: (cvJson: string, candidateName?: string, designJson?: string) => ipcRenderer.invoke('export:docx', cvJson, candidateName, designJson),
   },
   platform: process.platform,
   system: {

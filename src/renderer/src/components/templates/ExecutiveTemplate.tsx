@@ -1,5 +1,5 @@
 import type { TemplateProps } from './types'
-import { hexToRgba } from './utils'
+import { hexToRgba, normalizeUrl } from './utils'
 
 export default function ExecutiveTemplate({ cv, design }: TemplateProps) {
   const { colors, fonts } = design
@@ -20,9 +20,9 @@ export default function ExecutiveTemplate({ cv, design }: TemplateProps) {
             {cv.contact?.email && <div>{cv.contact.email}</div>}
             {cv.contact?.phone && <div>{cv.contact.phone}</div>}
             {cv.contact?.location && <div>{cv.contact.location}</div>}
-            {cv.contact?.linkedin && <div><a href={cv.contact.linkedin} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.linkedin}</a></div>}
-            {cv.contact?.github && <div><a href={cv.contact.github} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.github}</a></div>}
-            {cv.contact?.website && <div><a href={cv.contact.website} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.website}</a></div>}
+            {cv.contact?.linkedin && <div><a href={normalizeUrl(cv.contact.linkedin, 'https://linkedin.com/in/')} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.linkedin}</a></div>}
+            {cv.contact?.github && <div><a href={normalizeUrl(cv.contact.github, 'https://github.com/')} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.github}</a></div>}
+            {cv.contact?.website && <div><a href={normalizeUrl(cv.contact.website, '')} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.website}</a></div>}
           </div>
         </div>
 
@@ -52,7 +52,7 @@ export default function ExecutiveTemplate({ cv, design }: TemplateProps) {
                     <span style={{ color: colors.primary, fontWeight: 600, marginLeft: '8px', fontSize: '12px' }}>{exp.company}</span>
                     {exp.location && <span style={{ color: tertiary, fontSize: '11px', marginLeft: '6px' }}>{exp.location}</span>}
                   </div>
-                  <div style={{ fontSize: '11px', color: secondary, flexShrink: 0 }}>{exp.startDate} – {exp.endDate}</div>
+                  <div style={{ fontSize: '11px', color: secondary, flexShrink: 0 }}>{[exp.startDate, exp.endDate].filter(Boolean).join(' – ')}</div>
                 </div>
                 <ul style={{ margin: 0, paddingLeft: '16px', color: secondary }}>
                   {(exp.bullets ?? []).map((b, j) => <li key={j} style={{ marginBottom: '4px', lineHeight: 1.6, breakInside: 'avoid' }}>{b}</li>)}
@@ -136,7 +136,7 @@ export default function ExecutiveTemplate({ cv, design }: TemplateProps) {
           <div>
             {((cv.skills?.technical?.length ?? 0) > 0 || (cv.skills?.soft?.length ?? 0) > 0) && (
               <div style={{ marginBottom: '16px' }}>
-                <h2 style={{ fontFamily: fonts.heading, fontSize: '13px', fontWeight: 700, color: colors.primary, margin: '0 0 12px 0', textTransform: 'uppercase', letterSpacing: '1px', pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>Core Competencies</h2>
+                <h2 style={{ fontFamily: fonts.heading, fontSize: '13px', fontWeight: 700, color: colors.primary, margin: '0 0 12px 0', textTransform: 'uppercase', letterSpacing: '1px', pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>Skills</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
                   {[...(cv.skills?.technical ?? []), ...(cv.skills?.soft ?? [])].map((s, i) => (
                     <div key={i} style={{ fontSize: '11px', color: secondary, display: 'flex', alignItems: 'center', gap: '5px' }}>

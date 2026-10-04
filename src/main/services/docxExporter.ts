@@ -29,13 +29,23 @@ interface RewrittenCV {
   projects: Array<{ name: string; description: string; technologies: string[]; url?: string; startDate?: string }>
 }
 
-export async function exportToDocx(cv: RewrittenCV): Promise<Buffer> {
+interface DesignColors { primary?: string }
+
+function normalizeContactUrl(value: string, prefix: string): string {
+  if (!value) return ''
+  if (value.startsWith('http://') || value.startsWith('https://')) return value
+  const domain = prefix.replace(/^https?:\/\//, '')
+  if (domain && value.startsWith(domain)) return 'https://' + value
+  return prefix ? prefix + value : value
+}
+
+export async function exportToDocx(cv: RewrittenCV, designColors?: DesignColors): Promise<Buffer> {
   const {
     Document, Paragraph, TextRun, AlignmentType,
     BorderStyle, Packer, ExternalHyperlink,
   } = getDocx()
 
-  const PRIMARY = '1e3a5f'
+  const PRIMARY = (designColors?.primary ?? '#1e3a5f').replace('#', '')
   const HR = new Paragraph({
     border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: PRIMARY } },
     spacing: { after: 160 },
@@ -100,7 +110,7 @@ export async function exportToDocx(cv: RewrittenCV): Promise<Buffer> {
     if (contactChildren.length > 0) {
       contactChildren.push(new TextRun({ text: '  |  ', size: 18, color: '555555', font: 'Calibri' }))
     }
-    const href = lp.value.startsWith('http') ? lp.value : (lp.prefix ? lp.prefix + lp.value : lp.value)
+    const href = normalizeContactUrl(lp.value, lp.prefix)
     contactChildren.push(new ExternalHyperlink({
       children: [new TextRun({ text: lp.value, size: 18, color: PRIMARY, font: 'Calibri', underline: {} })],
       link: href,
@@ -140,7 +150,7 @@ export async function exportToDocx(cv: RewrittenCV): Promise<Buffer> {
         ],
         spacing: { after: 40 },
       }))
-      children.push(para(`${exp.startDate} – ${exp.endDate}`, { italic: true, size: 18 }))
+      children.push(para([exp.startDate, exp.endDate].filter(Boolean).join(' – '), { italic: true, size: 18 }))
       for (const b of exp.bullets ?? []) {
         children.push(bullet(b))
       }
@@ -227,7 +237,9 @@ export async function exportToDocx(cv: RewrittenCV): Promise<Buffer> {
 
   const doc = new Document({
     sections: [{
-      properties: {},
+      properties: {
+        page: { margin: { top: 720, bottom: 720, left: 900, right: 900 } },
+      },
       children,
     }],
     styles: {

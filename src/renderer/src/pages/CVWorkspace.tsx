@@ -3,7 +3,7 @@ import {
   Upload, FileText, Briefcase, Wand2, AlertTriangle,
   ChevronRight, X, Loader2, TrendingUp, Target, Search,
   Link, Globe, Copy, Check, Lightbulb, ChevronDown, ChevronUp,
-  RefreshCw, Info, Eye, Zap, MessageSquare, Award, Terminal, Settings2, Trash2
+  RefreshCw, Info, Eye, Zap, MessageSquare, Award, Terminal, Settings2, Trash2, Plus
 } from 'lucide-react'
 import { useStore } from '../store/appStore'
 
@@ -182,6 +182,25 @@ export default function CVWorkspace() {
     navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function handleAddKeyword(keyword: string) {
+    if (!store.currentCV || !store.activeConfig) return
+    try {
+      const response = await window.api.ai.chatEditCV(
+        store.activeConfig, store.currentCV,
+        `Add "${keyword}" to my core competencies or skills section where it genuinely applies based on my existing experience.`,
+        store.customInstructions || undefined
+      )
+      if (response.success && response.cv) {
+        store.setCurrentCV(response.cv)
+        store.addToast(`Added "${keyword}" to CV`, 'success')
+      } else {
+        store.addToast(response.error ?? 'Failed to add keyword', 'error')
+      }
+    } catch (e: any) {
+      store.addToast(e.message, 'error')
+    }
   }
 
   const result = store.analysisResult
@@ -566,6 +585,9 @@ export default function CVWorkspace() {
                     <div>
                       <div className="text-white font-bold text-lg">{result.score}/100</div>
                       <div className="text-slate-500 text-xs">Overall Match</div>
+                      <div className="text-xs text-slate-400 mt-0.5 leading-relaxed">
+                        {result.score > 80 ? 'Strong — focus on keyword gaps' : result.score > 60 ? 'Good — address improvements below' : result.score > 40 ? 'Needs work — start with High priority fixes' : 'Significant gaps — try a more capable model'}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -671,7 +693,14 @@ export default function CVWorkspace() {
                       <div className="text-amber-400 text-xs font-medium mb-1.5">Missing from CV ({(result.keywordsMissing ?? result.missingKeywords ?? []).length})</div>
                       <div className="flex flex-wrap gap-1.5">
                         {(result.keywordsMissing ?? result.missingKeywords ?? []).map((kw) => (
-                          <span key={kw} className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs rounded">{kw}</span>
+                          <span key={kw} className="flex items-center gap-0.5 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs rounded">
+                            {kw}
+                            {store.currentCV && store.activeConfig && (
+                              <button onClick={() => handleAddKeyword(kw)} title={`Add "${kw}" to CV`} className="ml-0.5 text-amber-500 hover:text-amber-200 transition-colors">
+                                <Plus size={10} />
+                              </button>
+                            )}
+                          </span>
                         ))}
                       </div>
                     </div>
@@ -888,7 +917,12 @@ function BulletQualityPanel({ issues }: { issues: Array<{ job: string; bullet: s
             <div className="text-slate-500 mb-1">{iss.job}</div>
             <div className="text-red-400/80 line-through mb-1">{iss.bullet}</div>
             <div className="text-slate-600 text-xs mb-1">{iss.issue}</div>
-            <div className="text-emerald-400/80">{iss.fix}</div>
+            <div className="flex items-start gap-1">
+              <div className="text-emerald-400/80 flex-1">{iss.fix}</div>
+              <button onClick={() => navigator.clipboard.writeText(iss.fix)} title="Copy improved bullet" className="shrink-0 text-slate-600 hover:text-emerald-400 transition-colors mt-0.5">
+                <Copy size={10} />
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -910,6 +944,11 @@ function InterviewPrepPanel({ prep }: { prep: { likelyQuestions: string[]; starS
       <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-800/50 transition-colors">
         <h3 className="text-white font-semibold text-sm flex items-center gap-2">
           <MessageSquare size={13} className="text-violet-400" /> Interview Prep
+          {!open && (prep.likelyQuestions?.length ?? 0) > 0 && (
+            <span className="text-xs bg-violet-500/15 border border-violet-500/25 text-violet-300 px-1.5 py-0.5 rounded-full">
+              {prep.likelyQuestions.length} questions ready
+            </span>
+          )}
         </h3>
         {open ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />}
       </button>

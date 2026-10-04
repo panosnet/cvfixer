@@ -1,3 +1,11 @@
+export function normalizeUrl(value: string, prefix: string): string {
+  if (!value) return ''
+  if (value.startsWith('http://') || value.startsWith('https://')) return value
+  const domain = prefix.replace(/^https?:\/\//, '')
+  if (domain && value.startsWith(domain)) return 'https://' + value
+  return prefix ? prefix + value : value
+}
+
 export function hexToRgba(hex: string, alpha: number): string {
   if (!hex) return `rgba(0,0,0,${alpha})`
   const c = hex.replace('#', '')

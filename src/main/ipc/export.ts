@@ -127,7 +127,7 @@ export function registerExportHandlers(ipcMain: IpcMain): void {
     }
   })
 
-  ipcMain.handle('export:docx', async (_event, cvJson: string, candidateName?: string) => {
+  ipcMain.handle('export:docx', async (_event, cvJson: string, candidateName?: string, designJson?: string) => {
     const focusedWin = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0]
     if (!focusedWin) return { success: false, error: 'No window available' }
 
@@ -146,7 +146,8 @@ export function registerExportHandlers(ipcMain: IpcMain): void {
 
     try {
       const cv = JSON.parse(cvJson)
-      const buffer = await exportToDocx(cv)
+      const design = designJson ? JSON.parse(designJson) : undefined
+      const buffer = await exportToDocx(cv, design?.colors)
       await fs.promises.writeFile(savePath.filePath!, buffer)
       return { success: true, path: savePath.filePath }
     } catch (e: any) {

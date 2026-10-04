@@ -1,6 +1,6 @@
 import React from 'react'
 import type { TemplateProps } from './types'
-import { hexToRgba } from './utils'
+import { hexToRgba, normalizeUrl } from './utils'
 
 export default function CreativeTemplate({ cv, design }: TemplateProps) {
   const { colors, fonts } = design
@@ -16,9 +16,9 @@ export default function CreativeTemplate({ cv, design }: TemplateProps) {
           {cv.contact?.email && <span>✉ {cv.contact.email}</span>}
           {cv.contact?.phone && <span>☎ {cv.contact.phone}</span>}
           {cv.contact?.location && <span>⊙ {cv.contact.location}</span>}
-          {cv.contact?.linkedin && <a href={cv.contact.linkedin} style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>in {cv.contact.linkedin}</a>}
-          {cv.contact?.github && <a href={cv.contact.github} style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>gh {cv.contact.github}</a>}
-          {cv.contact?.website && <a href={cv.contact.website} style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>↗ {cv.contact.website}</a>}
+          {cv.contact?.linkedin && <a href={normalizeUrl(cv.contact.linkedin, 'https://linkedin.com/in/')} style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>{cv.contact.linkedin}</a>}
+          {cv.contact?.github && <a href={normalizeUrl(cv.contact.github, 'https://github.com/')} style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>{cv.contact.github}</a>}
+          {cv.contact?.website && <a href={normalizeUrl(cv.contact.website, '')} style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>{cv.contact.website}</a>}
         </div>
       </div>
 
@@ -50,7 +50,7 @@ export default function CreativeTemplate({ cv, design }: TemplateProps) {
                         <div style={{ color: colors.primary, fontWeight: 600, fontSize: '12px' }}>{exp.company}{exp.location ? ` · ${exp.location}` : ''}</div>
                       </div>
                       <div style={{ fontSize: '11px', color: secondary, textAlign: 'right', flexShrink: 0, marginLeft: '8px' }}>
-                        {exp.startDate}<br />{exp.endDate}
+                        {exp.startDate && <>{exp.startDate}<br /></>}{exp.endDate}
                       </div>
                     </div>
                     <ul style={{ margin: '6px 0 0', paddingLeft: '16px', color: secondary }}>

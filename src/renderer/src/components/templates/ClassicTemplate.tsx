@@ -1,6 +1,6 @@
 import React from 'react'
 import type { TemplateProps } from './types'
-import { hexToRgba } from './utils'
+import { hexToRgba, normalizeUrl } from './utils'
 
 export default function ClassicTemplate({ cv, design }: TemplateProps) {
   const { colors, fonts } = design
@@ -16,9 +16,9 @@ export default function ClassicTemplate({ cv, design }: TemplateProps) {
           {cv.contact?.email && <span>{cv.contact.email}</span>}
           {cv.contact?.phone && <span>{cv.contact.phone}</span>}
           {cv.contact?.location && <span>{cv.contact.location}</span>}
-          {cv.contact?.linkedin && <a href={cv.contact.linkedin} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.linkedin}</a>}
-          {cv.contact?.github && <a href={cv.contact.github} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.github}</a>}
-          {cv.contact?.website && <a href={cv.contact.website} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.website}</a>}
+          {cv.contact?.linkedin && <a href={normalizeUrl(cv.contact.linkedin, 'https://linkedin.com/in/')} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.linkedin}</a>}
+          {cv.contact?.github && <a href={normalizeUrl(cv.contact.github, 'https://github.com/')} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.github}</a>}
+          {cv.contact?.website && <a href={normalizeUrl(cv.contact.website, '')} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.website}</a>}
         </div>
       </div>
 
@@ -46,7 +46,7 @@ export default function ClassicTemplate({ cv, design }: TemplateProps) {
                   <div style={{ fontWeight: 700, fontSize: '14px' }}>{exp.title}</div>
                   <div style={{ color: colors.primary, fontSize: '13px', fontWeight: 500 }}>{exp.company}{exp.location ? ` · ${exp.location}` : ''}</div>
                 </div>
-                <div style={{ fontSize: '12px', color: secondary, whiteSpace: 'nowrap', marginLeft: '8px' }}>{exp.startDate} – {exp.endDate}</div>
+                <div style={{ fontSize: '12px', color: secondary, whiteSpace: 'nowrap', marginLeft: '8px' }}>{[exp.startDate, exp.endDate].filter(Boolean).join(' – ')}</div>
               </div>
               <ul style={{ margin: '6px 0 0 0', paddingLeft: '18px' }}>
                 {(exp.bullets ?? []).map((b, j) => <li key={j} style={{ marginBottom: '3px', breakInside: 'avoid' }}>{b}</li>)}

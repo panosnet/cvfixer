@@ -1,5 +1,5 @@
 import type { TemplateProps } from './types'
-import { hexToRgba } from './utils'
+import { hexToRgba, normalizeUrl } from './utils'
 
 export default function MinimalTemplate({ cv, design }: TemplateProps) {
   const { colors, fonts } = design
@@ -14,9 +14,9 @@ export default function MinimalTemplate({ cv, design }: TemplateProps) {
           {cv.contact?.email && <span>{cv.contact.email}</span>}
           {cv.contact?.phone && <span>{cv.contact.phone}</span>}
           {cv.contact?.location && <span>{cv.contact.location}</span>}
-          {cv.contact?.linkedin && <a href={cv.contact.linkedin} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.linkedin}</a>}
-          {cv.contact?.github && <a href={cv.contact.github} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.github}</a>}
-          {cv.contact?.website && <a href={cv.contact.website} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.website}</a>}
+          {cv.contact?.linkedin && <a href={normalizeUrl(cv.contact.linkedin, 'https://linkedin.com/in/')} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.linkedin}</a>}
+          {cv.contact?.github && <a href={normalizeUrl(cv.contact.github, 'https://github.com/')} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.github}</a>}
+          {cv.contact?.website && <a href={normalizeUrl(cv.contact.website, '')} style={{ color: secondary, textDecoration: 'none' }}>{cv.contact.website}</a>}
         </div>
       </div>
 
@@ -39,8 +39,8 @@ export default function MinimalTemplate({ cv, design }: TemplateProps) {
           {cv.experience.map((exp, i) => (
             <div key={i} className="experience-entry" style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '16px', marginBottom: '20px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
               <div style={{ fontSize: '11px', color: secondary, paddingTop: '2px' }}>
-                <div>{exp.startDate}</div>
-                <div>— {exp.endDate}</div>
+                {exp.startDate && <div>{exp.startDate}</div>}
+                {exp.endDate && <div>— {exp.endDate}</div>}
               </div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: '13px' }}>{exp.title}</div>
@@ -73,11 +73,26 @@ export default function MinimalTemplate({ cv, design }: TemplateProps) {
       {((cv.skills?.technical?.length ?? 0) > 0 || (cv.skills?.soft?.length ?? 0) > 0) && (
         <div style={{ marginBottom: '24px' }}>
           <SectionLabel label="Skills" labelColor={labelColor} />
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-            {[...(cv.skills?.technical ?? []), ...(cv.skills?.soft ?? [])].map((s, i) => (
-              <span key={i} style={{ fontSize: '11px', color: secondary, border: `1px solid ${hexToRgba(colors.primary, 0.25)}`, borderRadius: '4px', padding: '2px 8px' }}>{s}</span>
-            ))}
-          </div>
+          {(cv.skills?.technical?.length ?? 0) > 0 && (
+            <div style={{ marginBottom: '6px' }}>
+              <span style={{ fontSize: '10px', color: labelColor, fontWeight: 600, marginRight: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Technical</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '4px' }}>
+                {cv.skills.technical.map((s, i) => (
+                  <span key={i} style={{ fontSize: '11px', color: secondary, border: `1px solid ${hexToRgba(colors.primary, 0.25)}`, borderRadius: '4px', padding: '2px 8px' }}>{s}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          {(cv.skills?.soft?.length ?? 0) > 0 && (
+            <div>
+              <span style={{ fontSize: '10px', color: labelColor, fontWeight: 600, marginRight: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Soft Skills</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '4px' }}>
+                {cv.skills.soft.map((s, i) => (
+                  <span key={i} style={{ fontSize: '11px', color: secondary, border: `1px solid ${hexToRgba(colors.primary, 0.25)}`, borderRadius: '4px', padding: '2px 8px' }}>{s}</span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

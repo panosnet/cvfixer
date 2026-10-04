@@ -93,9 +93,12 @@ function extractPositionHints(cvText: string): string[] {
   const hints: string[] = []
   const datePattern = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|january|february|march|april|may|june|july|august|september|october|november|december)\s*\.?\s*\d{4}\b|\b\d{4}\s*[-–—]\s*(present|current|now|\d{4})\b|\b(20\d{2}|19\d{2})\s*[-–—to]+\s*(20\d{2}|19\d{2}|present|current|now)\b/gi
 
+  const educationSkip = /university|college|bachelor|master|degree|certified|certification|published|award|phd|mba|bsc|msc|diploma|school|institute|academy/i
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
     if (!line) continue
+    if (educationSkip.test(line)) { datePattern.lastIndex = 0; continue }
     if (datePattern.test(line)) {
       const context = lines.slice(Math.max(0, i - 1), i + 2).map(l => l.trim()).filter(Boolean).join(' | ')
       hints.push(context)
@@ -123,7 +126,7 @@ You are a world-class CV/resume writer and career coach. Your goal is to help th
 5. NEVER add experience, companies, degrees, skills, or achievements not in the original CV
 6. NEVER invent numbers or percentages — if no real metric exists, describe scope qualitatively
 7. NEVER copy job description responsibilities into CV bullets — the JD is READ-ONLY context
-8. NEVER use these recruiter red-flag phrases: "results-driven", "passionate about", "proven track record", "dynamic professional", "detail-oriented", "spearheaded", "leveraged", "synergy", "thought leader"
+8. NEVER use these recruiter red-flag phrases: "results-driven", "passionate about", "proven track record", "dynamic professional", "detail-oriented", "spearheaded", "leveraged", "synergy", "thought leader", "self-starter", "go-getter", "motivated", "innovative", "team player", "strong communication skills", "hard-working", "highly motivated", "forward-thinking"
 9. Every experience entry MUST correspond to a real job from the CV below
 10. Experience MUST be in REVERSE CHRONOLOGICAL ORDER (most recent first)
 
@@ -137,7 +140,9 @@ SKILLS: Copy ONLY skills and tools explicitly named in the CV. Do NOT infer tool
   - You may REORDER and REFORMAT skills for clarity — never ADD new ones
 CERTIFICATIONS: List ONLY certifications explicitly named with their full title in the CV
 EDUCATION: Copy exactly — do NOT upgrade degree levels or add institutions not mentioned
-SELF-CHECK before outputting: For every item in skills.languages, ask "Is this word or phrase literally present in the CV text?" If no → remove it.
+SELF-CHECK before outputting:
+- For every item in skills.languages: ask "Is this language literally in the CV text?" If no → remove it.
+- For every item in skills.technical: ask "Is this exact tool, technology, or skill literally named in the CV text?" If no → remove it.
 
 ═══ CRITICAL: PRESERVE ALL POSITIONS ═══
 I have detected approximately ${positionCount} positions/roles in this CV.
@@ -180,6 +185,8 @@ These top achievements MUST:
 3. If a number exists anywhere near the achievement in the CV, connect it explicitly
 4. If the achievement is vague in the original ("improved performance"), add the scope/context that IS in the CV ("improved performance of the payment processing pipeline serving 2M daily transactions")
 
+RECONCILIATION RULE — strictly enforced: If the CV contains NO specific number near an achievement (no count, %, $, time duration), write scope QUALITATIVELY ONLY — e.g., "across a team of 12 engineers" or "for the company's top enterprise accounts". NEVER invent a percentage, dollar figure, or specific count that is not literally in the CV text.
+
 The rest of the bullets fill in responsibilities — but the FIRST bullet of each role must be the strongest achievement from that role.
 
 ═══ BULLET QUALITY RULES ═══
@@ -200,6 +207,7 @@ The rest of the bullets fill in responsibilities — but the FIRST bullet of eac
 "[X]+ years [specialisation] in [industry/domain]. Expert in [specific skill 1], [skill 2], and [skill 3]. [Most impressive honest career achievement, quantified if real data exists]. [One sentence tailored value proposition for this specific role/industry]."
 - No first-person pronouns (no "I", "me", "my")
 - Do NOT use any of the banned phrases from Rule 8
+- EXPERIENCE LEVEL: If the candidate's experience array has ≤2 entries OR career span is under 5 years (check first and last dates), replace "Expert in" with "with X years of experience in". Never open with "Expert" for early-career candidates — it reads as overreach to recruiters.
 
 ═══ CORE COMPETENCIES ═══
 Generate 6–12 core competency terms placed immediately after the summary. These must:
@@ -208,13 +216,24 @@ Generate 6–12 core competency terms placed immediately after the summary. Thes
 - Be formatted as chips (short terms: "Python 3.x", "Stakeholder Management", "P&L Ownership")
 
 ═══ SCORING RUBRIC ═══
-scoreBreakdown (calculate each category 0–100):
-- quantification: % of bullets that have a real metric, scale indicator, or specific outcome
-- keywords: % of critical JD keywords that appear in the rewritten CV
-- summary: does it follow the formula above? Clear identity, expertise, achievement, value prop?
+scoreBreakdown (calculate each category 0–100, use the anchors below — do NOT cluster around 65-75):
+- quantification: % of bullets with a real metric, scale indicator, or specific outcome
+  Anchors: 90 = 9+ of 10 bullets have real metrics/numbers/scale; 70 = 6–7 bullets; 40 = 3–4 bullets have any number; 20 = almost none
+- keywords: % of critical JD keywords appearing in the rewritten CV
+  Anchors: 90 = nearly all critical JD keywords present; 70 = ~70% present; 50 = fewer than half; 0 = no JD provided
+- summary: does it follow the formula? Clear identity, expertise, achievement, value prop?
+  Anchors: 90 = follows formula exactly, specific achievement, no banned phrases; 60 = mostly correct but generic; 40 = vague or uses banned phrases
 - format: reverse chronological? Standard headers? No invented dates? Consistent tense?
-- completeness: all sections present? No unexplained gaps? Skills and education complete?
-Overall score = weighted average: quant(25%) + keywords(25%) + summary(20%) + format(15%) + completeness(15%)
+  Anchors: 90 = perfect reverse-chron, standard headers, consistent tense; 70 = mostly correct; 50 = tense mixing or non-standard headers
+- completeness: all original sections present? No unexplained gaps? Skills and education complete?
+  Anchors: 90 = all original sections present, no gaps; 70 = minor omissions; 50 = missing sections from original CV
+Overall score is computed from the weighted average — write accurate sub-scores and the overall will be derived: quant(25%) + keywords(25%) + summary(20%) + format(15%) + completeness(15%)
+
+atsScore (0–100, use these anchors):
+  90–100: single-column layout, all standard section headers (Experience/Education/Skills/Certifications), ≥90% JD keywords in CV
+  70–89: mostly standard headers, 70–89% keyword coverage, minor formatting issues
+  50–69: some complex layout OR missing a standard section OR 50–69% keyword coverage
+  below 50: multi-column layout, missing critical sections, or below 50% keyword coverage
 
 topStrength: the single most compelling thing about this candidate (quote a specific detail from their background)
 topWeakness: the single most damaging gap to fix (be specific and honest)
@@ -240,9 +259,9 @@ Based on the detected industry, emphasise:
 pageEstimate: estimate 1 if total content fits on one A4 page, 2 if it needs two. Base on experience count and bullet volume. Most candidates with <10 years should be 1 page.
 
 ═══ INTERVIEW PREP (keep brief — save output tokens for the CV) ═══
-- 3 likely interview questions (short, 1 sentence each)
-- 1 STAR story framework (brief)
-- 3 technical topics (just names, no descriptions)
+- 5 likely interview questions (short, 1 sentence each)
+- 2 STAR story frameworks (brief)
+- 3 technical topics to review (just names, no descriptions)
 
 ═══ OUTPUT TOKEN BUDGET ═══
 Prioritize completeness of rewrittenCV over analysis depth.
@@ -312,9 +331,10 @@ Return this exact JSON structure:
     { "section": "<section name>", "issue": "<specific problem>", "suggestion": "<concrete fix>", "priority": "high" }
   ],
   "interviewPrep": {
-    "likelyQuestions": ["question1", "question2", "question3", "question4"],
+    "likelyQuestions": ["question1", "question2", "question3", "question4", "question5"],
     "starStories": [
-      { "question": "<likely interview question>", "situation": "<which role/project to draw from>", "metrics": "<real data points to include>" }
+      { "question": "<likely interview question>", "situation": "<which role/project to draw from>", "metrics": "<real data points to include>" },
+      { "question": "<second likely interview question>", "situation": "<which role/project to draw from>", "metrics": "<real data points to include>" }
     ],
     "technicalTopics": ["topic1", "topic2", "topic3"]
   },
@@ -341,7 +361,6 @@ function validateResult(result: unknown, originalCvText?: string): CVAnalysisRes
 
   // Top-level defaults
   if (typeof r.score !== 'number') r.score = 50
-  r.score = Math.max(0, Math.min(100, r.score))
   if (typeof r.atsScore !== 'number') r.atsScore = 50
   r.atsScore = Math.max(0, Math.min(100, r.atsScore))
   if (!r.scoreBreakdown) r.scoreBreakdown = { quantification: 50, keywords: 50, summary: 50, format: 50, completeness: 50 }
@@ -349,9 +368,15 @@ function validateResult(result: unknown, originalCvText?: string): CVAnalysisRes
     if (typeof r.scoreBreakdown[k] !== 'number') r.scoreBreakdown[k] = 50
     r.scoreBreakdown[k] = Math.max(0, Math.min(100, r.scoreBreakdown[k]))
   }
+  // Always recompute overall score from breakdown — prevents model self-scoring drift
+  {
+    const { quantification: q, keywords: k, summary: s, format: f, completeness: c } = r.scoreBreakdown
+    r.score = Math.round(0.25 * q + 0.25 * k + 0.20 * s + 0.15 * f + 0.15 * c)
+  }
   if (!r.topStrength) r.topStrength = ''
   if (!r.topWeakness) r.topWeakness = ''
   if (typeof r.pageEstimate !== 'number') r.pageEstimate = 1
+  r.pageEstimate = Math.max(1, Math.min(4, Math.round(r.pageEstimate)))
   if (!r.summary) r.summary = 'Analysis complete.'
   if (!r.industryDetected) r.industryDetected = 'General'
   if (!Array.isArray(r.keywordsFound)) r.keywordsFound = []
@@ -360,16 +385,33 @@ function validateResult(result: unknown, originalCvText?: string): CVAnalysisRes
   if (!Array.isArray(r.atsTips)) r.atsTips = []
   if (!r.coverLetterOpening) r.coverLetterOpening = ''
   if (!Array.isArray(r.bulletQualityIssues)) r.bulletQualityIssues = []
+  r.bulletQualityIssues = r.bulletQualityIssues.map((item: any) => ({
+    job: String(item?.job ?? ''),
+    bullet: String(item?.bullet ?? ''),
+    issue: String(item?.issue ?? ''),
+    fix: String(item?.fix ?? ''),
+  }))
   if (!Array.isArray(r.improvements)) r.improvements = []
+  r.improvements = r.improvements.map((imp: any) => ({
+    ...imp,
+    priority: (['high', 'medium', 'low'].includes(String(imp?.priority ?? '').toLowerCase())
+      ? String(imp.priority).toLowerCase()
+      : 'medium') as 'high' | 'medium' | 'low',
+  }))
   if (!r.interviewPrep) r.interviewPrep = { likelyQuestions: [], starStories: [], technicalTopics: [] }
   if (!Array.isArray(r.interviewPrep.likelyQuestions)) r.interviewPrep.likelyQuestions = []
   if (!Array.isArray(r.interviewPrep.starStories)) r.interviewPrep.starStories = []
+  r.interviewPrep.starStories = r.interviewPrep.starStories.map((s: any) => ({
+    question: String(s?.question ?? ''),
+    situation: String(s?.situation ?? ''),
+    metrics: String(s?.metrics ?? ''),
+  }))
   if (!Array.isArray(r.interviewPrep.technicalTopics)) r.interviewPrep.technicalTopics = []
 
   if (!r.rewrittenCV) throw new Error('AI did not return a rewritten CV. Try a more capable model or paid API.')
   const cv = r.rewrittenCV
   if (!cv.name) cv.name = 'Name not found'
-  if (!cv.title) cv.title = ''
+  if (!cv.title) cv.title = cv.experience?.[0]?.title ?? ''
   if (!cv.contact) cv.contact = { email: '', phone: '', location: '', linkedin: '', github: '', website: '' }
   if (!cv.summary) cv.summary = ''
   if (!Array.isArray(cv.coreCompetencies)) cv.coreCompetencies = []
@@ -379,6 +421,9 @@ function validateResult(result: unknown, originalCvText?: string): CVAnalysisRes
   if (!Array.isArray(cv.skills.technical)) cv.skills.technical = []
   if (!Array.isArray(cv.skills.soft)) cv.skills.soft = []
   if (!Array.isArray(cv.skills.languages)) cv.skills.languages = []
+  cv.skills.technical = cv.skills.technical.filter((s: any) => typeof s === 'string')
+  cv.skills.soft = cv.skills.soft.filter((s: any) => typeof s === 'string')
+  cv.skills.languages = cv.skills.languages.filter((s: any) => typeof s === 'string')
   if (!Array.isArray(cv.certifications)) cv.certifications = []
   if (!Array.isArray(cv.achievements)) cv.achievements = []
   if (!Array.isArray(cv.publications)) cv.publications = []
@@ -590,10 +635,16 @@ export async function chatEditCV(
   onStream?: (chunk: string) => void,
   customInstructions?: string
 ): Promise<CVAnalysisResult['rewrittenCV']> {
+  const cvJson = JSON.stringify(cv)
+  const isTruncated = cvJson.length > 12000
+  const cvDisplay = isTruncated
+    ? cvJson.slice(0, 12000) + '... [truncated — preserve all existing fields not mentioned in the request]'
+    : cvJson
+
   const prompt = `You are a CV editing assistant. The user wants to modify their CV.
 
-Current CV (JSON):
-${JSON.stringify(cv)}
+Current CV (JSON)${isTruncated ? ' [truncated at 12,000 chars — keep all existing fields]' : ''}:
+${cvDisplay}
 
 User request: "${userMessage}"
 
@@ -643,7 +694,13 @@ Return the complete modified CV JSON now:`
     bullets: Array.isArray(e.bullets) ? e.bullets : cv.experience[i]?.bullets ?? [],
   }))
   if (!Array.isArray(parsed.education)) parsed.education = cv.education
-  if (!parsed.skills) parsed.skills = cv.skills
+  if (!parsed.skills) {
+    parsed.skills = cv.skills
+  } else {
+    if (!Array.isArray(parsed.skills.technical)) parsed.skills.technical = cv.skills?.technical ?? []
+    if (!Array.isArray(parsed.skills.soft)) parsed.skills.soft = cv.skills?.soft ?? []
+    if (!Array.isArray(parsed.skills.languages)) parsed.skills.languages = cv.skills?.languages ?? []
+  }
   if (!Array.isArray(parsed.certifications)) parsed.certifications = cv.certifications ?? []
   if (!Array.isArray(parsed.coreCompetencies)) parsed.coreCompetencies = cv.coreCompetencies ?? []
   if (!Array.isArray(parsed.achievements)) parsed.achievements = cv.achievements ?? []
@@ -763,9 +820,13 @@ async function runOllama(
   let inputTokens = 0
   let outputTokens = 0
 
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 120_000)
+
   const response = await fetch('http://localhost:11434/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    signal: controller.signal,
     body: JSON.stringify({
       model: config.model,
       messages: [{ role: 'user', content: prompt }],
@@ -778,15 +839,17 @@ async function runOllama(
   })
 
   if (!response.ok) {
+    clearTimeout(timeoutId)
     const errBody = await response.text().catch(() => '')
     throw new Error(`Ollama error ${response.status}: ${errBody.slice(0, 200)}`)
   }
-  if (!response.body) throw new Error('No response body from Ollama')
+  if (!response.body) { clearTimeout(timeoutId); throw new Error('No response body from Ollama') }
 
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
 
+  try {
   while (true) {
     const { done, value } = await reader.read()
     if (done) break
@@ -826,6 +889,9 @@ async function runOllama(
       }
     } catch {}
   }
+  } finally {
+    clearTimeout(timeoutId)
+  }
 
   return text
 }
@@ -841,7 +907,7 @@ function parseJSON(raw: string): unknown {
   if (start === -1) throw new Error('No JSON object found in AI response')
   text = text.slice(start)
 
-  let depth = 0, inString = false, escape = false, end = -1
+  let depth = 0, arrayDepth = 0, inString = false, escape = false, end = -1
   for (let i = 0; i < text.length; i++) {
     const ch = text[i]
     if (escape) { escape = false; continue }
@@ -850,6 +916,8 @@ function parseJSON(raw: string): unknown {
     if (inString) continue
     if (ch === '{') depth++
     else if (ch === '}') { depth--; if (depth === 0) { end = i; break } }
+    else if (ch === '[') arrayDepth++
+    else if (ch === ']') arrayDepth = Math.max(0, arrayDepth - 1)
   }
 
   let candidate: string
@@ -858,6 +926,7 @@ function parseJSON(raw: string): unknown {
   } else {
     candidate = text
     if (inString) candidate += '"'
+    candidate += ']'.repeat(arrayDepth)
     candidate += '}'.repeat(Math.max(1, depth))
   }
 

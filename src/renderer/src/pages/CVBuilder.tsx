@@ -97,7 +97,7 @@ export default function CVBuilder() {
     if (!store.currentCV) return
     setExportingDocx(true)
     try {
-      const result = await window.api.export.docx(JSON.stringify(store.currentCV), store.currentCV.name)
+      const result = await window.api.export.docx(JSON.stringify(store.currentCV), store.currentCV.name, JSON.stringify(design))
       if (result.success) {
         store.addToast(`DOCX saved${result.path ? `: ${result.path.split('/').pop()}` : ''}`, 'success')
       } else if (result.error) {
@@ -531,6 +531,8 @@ function ContentEditor({ cv, store }: { cv: any; store: ReturnType<typeof useSto
             </div>
             <div className="space-y-2">
               <Field label="Name" value={p.name} onChange={(v) => store.updateProject(i, { name: v })} />
+              <Field label="URL" value={(p as any).url} onChange={(v) => store.updateProject(i, { url: v } as any)} />
+              <Field label="Start Date" value={(p as any).startDate} onChange={(v) => store.updateProject(i, { startDate: v } as any)} />
               <div>
                 <div className="text-xs text-slate-600 mb-0.5">Description</div>
                 <textarea

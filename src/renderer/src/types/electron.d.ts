@@ -48,7 +48,7 @@ interface AIAPI {
 
 interface ExportAPI {
   pdf: (html: string, candidateName?: string) => Promise<{ success: boolean; path?: string; error?: string }>
-  docx: (cvJson: string, candidateName?: string) => Promise<{ success: boolean; path?: string; error?: string }>
+  docx: (cvJson: string, candidateName?: string, designJson?: string) => Promise<{ success: boolean; path?: string; error?: string }>
 }
 
 // IMPORTANT: use `declare global` so this augments the actual global Window
