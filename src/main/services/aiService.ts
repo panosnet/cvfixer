@@ -190,18 +190,38 @@ RECONCILIATION RULE — strictly enforced: If the CV contains NO specific number
 The rest of the bullets fill in responsibilities — but the FIRST bullet of each role must be the strongest achievement from that role.
 
 ═══ BULLET QUALITY RULES ═══
-- 3–5 bullets for current/most recent role; 2–3 for older roles
-- Maximum 2 lines per bullet (keep them scannable)
-- Format: [Strong verb in correct tense] + [specific action + context] + [result/scope]
-- TENSE: Present tense for current role. Past tense for all previous roles. No mixing.
+- 3–5 bullets for current/most recent role; 2–3 for older roles; 1–2 for roles 10+ years ago
+- Maximum 2 sentences per bullet (keep them scannable — one idea per bullet)
+- Format: [Strong verb in correct tense] + [specific action + context] + [quantified result or scope]
+- TENSE: Present tense for current role. Past tense for ALL previous roles. No mixing within a bullet.
 - Use REAL numbers from the CV. If none exist, describe scope: "across 12 countries", "for the company's top 3 enterprise clients", "supporting 500K daily active users" — but NEVER invent percentages or dollar amounts
-- Do NOT start bullets with: "Responsible for", "Helped to", "Assisted with", "Worked on"
-- Provide context + scale in each bullet — a metric without context is weak ("Reduced latency by 40%" → better: "Reduced API P99 latency from 2.1s to 1.2s for 8M daily active users, enabling expansion into latency-sensitive enterprise segment")
-- WEAK bullets to STRONG examples:
-  × "Managed a team" → ✓ "Led and mentored a cross-functional team of 12 engineers across 3 time zones"
-  × "Improved sales" → ✓ "Grew enterprise pipeline from $2M to $8.5M ARR within 18 months by restructuring the outbound strategy"
-  × "Developed software" → ✓ "Architected and shipped the real-time analytics platform processing 50K events/sec, adopted by 40+ enterprise clients"
-  × "Handled customer issues" → ✓ "Resolved 95% of escalated enterprise accounts within SLA, retaining $3.2M in at-risk revenue"
+- Do NOT start bullets with: "Responsible for", "Helped to", "Assisted with", "Worked on", "Was involved in", "Participated in", "Contributed to"
+- Provide context + scale — a metric without context is weak: "Reduced latency by 40%" → "Reduced API P99 latency from 2.1s to 1.2s for 8M daily active users, enabling expansion into latency-sensitive enterprise segment"
+
+STRONG VERB BANK — use these, matched to actual role function:
+Leadership/Management: Led, Directed, Managed, Supervised, Mentored, Coached, Scaled, Hired, Built, Grew, Restructured, Oversaw
+Strategy/Planning: Defined, Designed, Architected, Established, Launched, Pioneered, Spearheaded (BANNED — use "Led" instead), Formulated, Devised
+Delivery/Execution: Delivered, Shipped, Deployed, Implemented, Executed, Rolled out, Released, Migrated, Automated
+Revenue/Growth: Generated, Grew, Increased, Expanded, Secured, Closed, Won, Upsold, Converted, Acquired
+Efficiency/Improvement: Reduced, Cut, Saved, Streamlined, Optimised, Accelerated, Simplified, Eliminated, Consolidated
+Analysis/Research: Analysed, Modelled, Evaluated, Assessed, Diagnosed, Researched, Identified, Mapped
+Communication/Influence: Presented, Negotiated, Persuaded, Advised, Trained, Facilitated, Partnered, Aligned
+
+WEAK → STRONG transformations:
+× "Managed a team" → ✓ "Led and mentored a cross-functional team of 12 engineers across 3 time zones"
+× "Improved sales" → ✓ "Grew enterprise pipeline from $2M to $8.5M ARR within 18 months by restructuring outbound strategy"
+× "Developed software" → ✓ "Architected and shipped real-time analytics platform processing 50K events/sec, adopted by 40+ enterprise clients"
+× "Handled customer issues" → ✓ "Resolved 95% of escalated enterprise accounts within SLA, retaining $3.2M in at-risk revenue"
+× "Worked on marketing campaigns" → ✓ "Delivered 14 integrated campaigns across 6 markets, generating $1.2M in attributed pipeline"
+× "Helped with data analysis" → ✓ "Built predictive churn model using Python/sklearn that identified at-risk accounts 45 days earlier"
+
+QUANTIFICATION TECHNIQUES — dig for these even when numbers aren't explicit in the CV:
+- Team size: how many people reported to them or they collaborated with
+- Budget: project/department/campaign budget managed
+- Geographic scope: number of countries, regions, or offices
+- Time impact: how much faster/sooner a result was achieved
+- Volume: transactions, users, requests, accounts, contracts per day/month/year
+- Scale: revenue of the company/division they operated in
 
 ═══ PROFESSIONAL SUMMARY FORMULA ═══
 "[X]+ years [specialisation] in [industry/domain]. Expert in [specific skill 1], [skill 2], and [skill 3]. [Most impressive honest career achievement, quantified if real data exists]. [One sentence tailored value proposition for this specific role/industry]."
@@ -214,6 +234,48 @@ Generate 6–12 core competency terms placed immediately after the summary. Thes
 - Be exact matches to JD keywords the candidate genuinely has
 - Be specific skills/tools, not generic attributes
 - Be formatted as chips (short terms: "Python 3.x", "Stakeholder Management", "P&L Ownership")
+- Keyword density: the most critical 3–4 JD keywords should appear in BOTH coreCompetencies AND at least one experience bullet — ATS systems weight frequency, not just presence
+
+═══ SKILLS SECTION HYGIENE ═══
+INCLUDE in skills.technical: programming languages, frameworks, platforms, tools, methodologies (Scrum/Agile), certifications-relevant technologies
+EXCLUDE from skills.technical (these hurt credibility): "Microsoft Office", "MS Word", "Excel", "PowerPoint", "Internet browsing", "Email", "Typing", "Windows", "Google Docs"
+  Exception: include Excel/SQL if the role is explicitly data/finance and the CV demonstrates advanced use
+SKILLS ORDERING: put the most JD-relevant skills first — ATS parsers scan left-to-right, top-to-bottom
+SOFT SKILLS guideline: only include soft skills that are proven by evidence in the experience section (e.g., "Cross-functional Leadership" is valid if they led cross-functional teams; "Communication" alone is not)
+
+═══ EDUCATION BEST PRACTICES ═══
+- Include degree, institution, location, year of graduation (or expected graduation)
+- Include GPA ONLY if: ≥3.5/4.0 (or equivalent) AND the candidate graduated within the past 5 years
+- Include relevant coursework, thesis title, or honours ONLY for recent graduates (<3 years) or where directly relevant to the JD
+- For experienced candidates (5+ years): education goes AFTER experience — never before
+- Professional certifications belong in the Certifications section, not Education
+
+═══ WHAT TO REMOVE — OUTDATED PRACTICES ═══
+These items actively harm a CV — do NOT include them and do NOT mention them in improvements:
+- "References available upon request" — assumed by default, wastes space
+- "Objective Statement" — replace with the professional summary
+- Personal details: photo, date of birth, marital status, nationality (unless specifically required by the region)
+- Full home address — city and country only is sufficient and safer
+- Hobbies/interests — unless directly relevant to the role or explicitly in the original CV and the user wants to keep them
+- "Curriculum Vitae" as a header — name goes at the top, not a title
+
+═══ RECRUITER PSYCHOLOGY — THE 6-SECOND SCAN ═══
+Recruiters scan CVs in under 10 seconds before deciding to read further. They read in this order:
+1. Name and current/most recent job title
+2. Current or most recent company name
+3. Start date of current role (how recent?)
+4. First 2 bullets of the most recent role
+5. Education institution and degree
+
+Apply this knowledge: the most impressive, specific information must appear in the top third of the CV. The professional headline and first job's first bullet are the highest-value real estate.
+
+═══ TAILORING STRATEGY ═══
+When a JD is provided, customise in this priority order:
+1. Mirror the exact JD job title in the headline (if the candidate's background honestly supports it)
+2. Put the most JD-relevant core competencies first in the array
+3. Reorder experience bullets so the most JD-relevant ones come first within each role
+4. Ensure every required skill or tool in the JD appears at least once in the CV (if the candidate has it)
+5. Use the JD's exact terminology — "product roadmap" not "feature planning"; "cross-functional" not "multi-team"
 
 ═══ SCORING RUBRIC ═══
 scoreBreakdown (calculate each category 0–100, use the anchors below — do NOT cluster around 65-75):
@@ -244,16 +306,66 @@ topWeakness: the single most damaging gap to fix (be specific and honest)
 - List skills as individual terms, not grouped categories
 - File format note: "If uploading to a job portal, use the Classic template PDF — it is the most ATS-compatible"
 
-═══ INDUSTRY-SPECIFIC NOTES ═══
-Based on the detected industry, emphasise:
-- Tech/Engineering: system scale, tech stack versions, GitHub contributions, deployment frequency
-- Finance: regulatory knowledge, AUM/deal sizes, CFA/CPA/FRM certifications, specific frameworks (Basel, IFRS)
-- Healthcare: patient outcomes, compliance (HIPAA, FDA, CQC), clinical settings, team sizes
-- Marketing: CAC, LTV, conversion rates, campaign budgets, audience sizes, platform-specific metrics
-- Consulting: client verticals, framework application, headcount/budget scope, cross-industry breadth
-- Executive: P&L ownership ($M), board-level exposure, headcount managed, M&A or fundraising involvement
-- Legal: bar admissions, deal value, case types, publications/articles
-- Academic: research areas, grant funding, publications count, teaching roles
+═══ INDUSTRY-SPECIFIC BEST PRACTICES ═══
+Based on the detected industry, apply these standards:
+
+Software/Engineering:
+  - Metrics: uptime %, latency (P95/P99), throughput (req/sec, events/day), deployment frequency, test coverage %
+  - Show tech stack with versions where meaningful: "Python 3.11", "React 18", "PostgreSQL 15"
+  - Include system scale: "serving 50M MAU", "processing $2B in daily transactions"
+  - Open-source contributions, GitHub stars, patents if present
+  - Avoid: "wrote code", "fixed bugs" — use: "engineered", "optimised", "reduced", "shipped"
+
+Finance/Banking:
+  - AUM/AUA, deal sizes, transaction volumes — always in $M or $B notation
+  - Regulatory frameworks: Basel III/IV, IFRS 9, MiFID II, Dodd-Frank, Solvency II
+  - CFA, CPA, ACCA, FRM, CFA credentials are critical — front-load them
+  - Avoid generic "financial analysis" — specify the instrument type, market, or asset class
+  - Risk metrics: VaR, Sharpe ratio, drawdown where relevant
+
+Healthcare/Clinical:
+  - Patient volume: "managed caseload of 40+ patients/day", "led 500-bed unit"
+  - Regulatory: HIPAA, FDA 21 CFR, CQC, JCI, NICE guidelines, GCP/GMP
+  - Clinical outcomes: readmission rates, mortality rates, satisfaction scores (HCAHPS)
+  - Specificity: clinical setting, speciality, patient population, procedures performed
+
+Marketing/Growth:
+  - Unit economics: CAC, LTV, LTV:CAC ratio, payback period, MQL-to-SQL conversion
+  - Channel metrics: CPL, ROAS, CTR, open rates by channel
+  - Campaign scale: budget managed, impressions, reach, attributed revenue
+  - Tools: specific platforms (HubSpot, Salesforce, Marketo, Google Ads, Meta Ads)
+  - Avoid: "increased brand awareness" — always attach a measurable outcome
+
+Sales:
+  - Quota attainment: "125% of $1.2M annual quota" (always state both % and absolute)
+  - Deal metrics: ACV, ARR, deal size, sales cycle length, win rate
+  - Pipeline: coverage ratio, pipe generated, stage conversion rates
+  - Territory/segment: enterprise, mid-market, SMB; geographic territory
+
+Consulting/Strategy:
+  - Client revenue/size where permitted: "Fortune 500", "$2B revenue", "Series C startup"
+  - Project outcomes: cost savings realised, revenue growth unlocked, efficiency gains
+  - Frameworks: name the methodology (MECE, BCG matrix, OKR implementation)
+  - Cross-industry breadth for generalist firms; depth for specialists
+
+Executive/C-Suite:
+  - P&L: revenue, EBITDA, budget owned — in $M or $B
+  - Headcount managed (direct + indirect): "led org of 450 across 8 countries"
+  - Board: presentations, audit committee, board observer status
+  - M&A: deal size, role (acquirer/target), integration leadership
+  - Fundraising: round size, lead investors, valuation milestone
+
+Legal:
+  - Jurisdiction and bar admissions upfront
+  - Deal/case value: "led $500M cross-border M&A", "defended patent portfolio valued at $80M"
+  - Client type: F500, PE/VC, government, litigation vs transactional
+  - Publications, speaking engagements, law review articles
+
+Academic/Research:
+  - Publications: journal name, impact factor, citation count if notable
+  - Grant funding: amount, funder, duration — "£2.1M EPSRC grant"
+  - Teaching: courses, student numbers, evaluation scores
+  - H-index if strong; conference presentations; editorial board roles
 
 ═══ PAGE ESTIMATE ═══
 pageEstimate: estimate 1 if total content fits on one A4 page, 2 if it needs two. Base on experience count and bullet volume. Most candidates with <10 years should be 1 page.

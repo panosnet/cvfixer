@@ -66,6 +66,7 @@ export default function CVWorkspace() {
   const [copied, setCopied] = useState(false)
   const [confirmReanalyze, setConfirmReanalyze] = useState(false)
   const [showCustomInstructions, setShowCustomInstructions] = useState(false)
+  const [showBestPractices, setShowBestPractices] = useState(false)
   const [promptModal, setPromptModal] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'results' | 'log'>('results')
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null)
@@ -396,6 +397,112 @@ export default function CVWorkspace() {
                     ✓ Content loaded ({store.jobDescription.length.toLocaleString()} chars) — switch to "Paste Text" to review
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+
+          {/* Best Practices Guide */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            <button
+              onClick={() => setShowBestPractices(v => !v)}
+              className="w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-slate-800/50 transition-colors"
+            >
+              <div className="flex items-center gap-2 text-slate-300 font-medium">
+                <Lightbulb size={14} className="text-amber-400" />
+                CV Best Practices
+              </div>
+              {showBestPractices ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />}
+            </button>
+            {showBestPractices && (
+              <div className="px-4 pb-4 border-t border-slate-800 space-y-4 text-xs text-slate-400 mt-3">
+
+                <div>
+                  <div className="text-slate-200 font-semibold mb-1.5">Bullet Formula</div>
+                  <div className="text-slate-500 mb-1">[Strong verb] + [specific action + context] + [result or scope]</div>
+                  <div className="space-y-0.5">
+                    <div><span className="text-red-400">✗</span> "Managed a team"</div>
+                    <div><span className="text-emerald-400">✓</span> "Led cross-functional team of 12 engineers across 3 time zones, delivering platform 6 weeks ahead of schedule"</div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-slate-200 font-semibold mb-1.5">Strong Verbs by Category</div>
+                  <div className="space-y-1">
+                    {[
+                      ['Leadership', 'Led · Directed · Scaled · Built · Grew · Restructured · Mentored'],
+                      ['Delivery', 'Delivered · Shipped · Deployed · Launched · Migrated · Automated'],
+                      ['Revenue', 'Generated · Grew · Secured · Closed · Won · Converted · Acquired'],
+                      ['Efficiency', 'Reduced · Cut · Saved · Streamlined · Optimised · Eliminated'],
+                      ['Strategy', 'Defined · Designed · Architected · Established · Formulated'],
+                    ].map(([cat, verbs]) => (
+                      <div key={cat}>
+                        <span className="text-violet-400 font-medium">{cat}: </span>
+                        <span className="text-slate-500">{verbs}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-slate-200 font-semibold mb-1.5">Quantification Techniques</div>
+                  <div className="text-slate-500 space-y-0.5">
+                    <div>· Team size: how many reports or collaborators</div>
+                    <div>· Budget: project or department budget managed</div>
+                    <div>· Volume: users, transactions, accounts per period</div>
+                    <div>· Geography: countries, regions, offices</div>
+                    <div>· Time: faster delivery, shorter cycle, quicker resolution</div>
+                    <div>· Scale: revenue of the company/division you worked in</div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-slate-200 font-semibold mb-1.5">Skills Section Rules</div>
+                  <div className="text-slate-500 space-y-0.5">
+                    <div>· Include: languages, frameworks, platforms, tools, methodologies</div>
+                    <div><span className="text-red-400">Remove:</span> MS Office, Word, Excel (unless advanced/financial), Internet, Typing, Windows</div>
+                    <div>· Order skills by JD relevance — ATS reads left to right</div>
+                    <div>· Soft skills only if proven by experience bullets</div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-slate-200 font-semibold mb-1.5">The 6-Second Scan</div>
+                  <div className="text-slate-500 space-y-0.5">
+                    <div>Recruiters look at in order: name → title → company → first 2 bullets → education</div>
+                    <div>→ Put your strongest, most specific content in the top third of the CV</div>
+                    <div>→ First bullet of each role = biggest achievement, not a responsibility</div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-slate-200 font-semibold mb-1.5">ATS Keyword Strategy</div>
+                  <div className="text-slate-500 space-y-0.5">
+                    <div>· Top 3–4 JD keywords should appear 2–3× across the CV (headline, competencies, bullets)</div>
+                    <div>· Use exact JD phrasing: "product roadmap" ≠ "feature planning" to ATS</div>
+                    <div>· "JavaScript" ≠ "JS" — spell out abbreviations at least once</div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-slate-200 font-semibold mb-1.5">Remove These</div>
+                  <div className="text-red-400/80 space-y-0.5">
+                    <div>· "References available upon request"</div>
+                    <div>· "Objective statement" (use professional summary instead)</div>
+                    <div>· Photo, date of birth, marital status, full home address</div>
+                    <div>· "CV" or "Resume" as a document title at the top</div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-slate-200 font-semibold mb-1.5">CV Length Rules</div>
+                  <div className="text-slate-500 space-y-0.5">
+                    <div>· Under 10 years experience → 1 page max</div>
+                    <div>· 10+ years or senior/executive → 2 pages max</div>
+                    <div>· Never 1.5 pages — either fill the page or cut to 1</div>
+                    <div>· Academic CVs are the only exception (can be 3–4 pages)</div>
+                  </div>
+                </div>
+
               </div>
             )}
           </div>
