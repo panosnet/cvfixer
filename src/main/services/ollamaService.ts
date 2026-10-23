@@ -85,7 +85,7 @@ export async function installOllamaLinux(
 }
 
 export async function listInstalledModels(): Promise<OllamaModel[]> {
-  const resp = await axios.get(`${OLLAMA_BASE}/api/tags`)
+  const resp = await axios.get(`${OLLAMA_BASE}/api/tags`, { timeout: 5000 })
   return resp.data.models || []
 }
 

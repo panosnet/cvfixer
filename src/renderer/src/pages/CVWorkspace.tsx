@@ -302,7 +302,7 @@ export default function CVWorkspace() {
                 </div>
                 <textarea
                   value={store.cvText}
-                  onChange={(e) => store.setCVText(e.target.value)}
+                  onChange={(e) => store.setCVText(e.target.value, '')}
                   className="w-full h-40 bg-slate-800 border border-slate-700 rounded-lg p-3 text-slate-300 text-xs font-mono resize-none focus:outline-none focus:border-violet-500"
                 />
               </div>

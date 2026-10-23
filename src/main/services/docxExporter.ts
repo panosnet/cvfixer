@@ -34,8 +34,10 @@ interface DesignColors { primary?: string }
 function normalizeContactUrl(value: string, prefix: string): string {
   if (!value) return ''
   if (value.startsWith('http://') || value.startsWith('https://')) return value
+  // Strip www. for comparison, then reconstruct
+  const bare = value.startsWith('www.') ? value.slice(4) : value
   const domain = prefix.replace(/^https?:\/\//, '')
-  if (domain && value.startsWith(domain)) return 'https://' + value
+  if (domain && (bare.startsWith(domain) || value.startsWith(domain))) return 'https://' + bare
   return prefix ? prefix + value : value
 }
 
@@ -210,7 +212,7 @@ export async function exportToDocx(cv: RewrittenCV, designColors?: DesignColors)
           spacing: { after: 40 },
         }))
       }
-      children.push(para(p.description))
+      if (p.description) children.push(para(p.description))
       if (p.technologies?.length) {
         children.push(para(`Technologies: ${p.technologies.join(', ')}`, { italic: true, size: 18 }))
       }

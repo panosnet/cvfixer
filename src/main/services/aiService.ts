@@ -389,7 +389,9 @@ function validateResult(result: unknown, originalCvText?: string): CVAnalysisRes
   }))
   if (!Array.isArray(r.improvements)) r.improvements = []
   r.improvements = r.improvements.map((imp: any) => ({
-    ...imp,
+    section: String(imp?.section ?? ''),
+    issue: String(imp?.issue ?? ''),
+    suggestion: String(imp?.suggestion ?? ''),
     priority: (['high', 'medium', 'low'].includes(String(imp?.priority ?? '').toLowerCase())
       ? String(imp.priority).toLowerCase()
       : 'medium') as 'high' | 'medium' | 'low',
@@ -409,6 +411,12 @@ function validateResult(result: unknown, originalCvText?: string): CVAnalysisRes
   if (!cv.name) cv.name = 'Name not found'
   if (!cv.title) cv.title = cv.experience?.[0]?.title ?? ''
   if (!cv.contact) cv.contact = { email: '', phone: '', location: '', linkedin: '', github: '', website: '' }
+  cv.contact.email = cv.contact.email ?? ''
+  cv.contact.phone = cv.contact.phone ?? ''
+  cv.contact.location = cv.contact.location ?? ''
+  cv.contact.linkedin = cv.contact.linkedin ?? ''
+  cv.contact.github = cv.contact.github ?? ''
+  cv.contact.website = cv.contact.website ?? ''
   if (!cv.summary) cv.summary = ''
   if (!Array.isArray(cv.coreCompetencies)) cv.coreCompetencies = []
   if (!Array.isArray(cv.experience)) cv.experience = []
@@ -458,6 +466,7 @@ function validateResult(result: unknown, originalCvText?: string): CVAnalysisRes
   if (!validHeadingFonts.includes(r.design.fonts.heading)) r.design.fonts.heading = 'Montserrat'
   if (!validBodyFonts.includes(r.design.fonts.body)) r.design.fonts.body = 'Inter'
 
+  if (!r.design.colors) r.design.colors = { primary: '#1e3a5f', secondary: '#2d5a8e', accent: '#4a90d9', text: '#1a1a2e', background: '#ffffff' }
   const dc = r.design.colors
   if (dc) {
     const hexRe = /^#[0-9a-fA-F]{3,8}$/
@@ -496,21 +505,6 @@ function checkIntegrity(cv: any, originalText: string): string[] {
     warnings.push(`Experience section is empty — the model did not return any jobs. The original CV appears to have ${estimatedJobs}+ roles. Try a paid API (Claude Sonnet, GPT-4o) for reliable results with long CVs.`)
   } else if (multipleJobs && cv.experience.length < estimatedJobs - 1 && estimatedJobs > 2) {
     warnings.push(`Only ${cv.experience.length} job${cv.experience.length === 1 ? '' : 's'} returned but your CV appears to have ~${estimatedJobs}. Some positions may be missing — check the Edit tab, or re-analyze with a larger model.`)
-  }
-
-  // Check if specific companies from the original CV are missing in the output
-  if (cv.experience.length > 0 && cv.experience.length < estimatedJobs) {
-    const outputCompanies = cv.experience.map((e: any) => (e.company ?? '').toLowerCase().trim())
-    const lines = originalText.split('\n').map(l => l.trim()).filter(Boolean)
-    const possibleCompanies: string[] = []
-    for (const line of lines) {
-      const cleaned = line.toLowerCase()
-      for (const comp of outputCompanies) {
-        if (comp && cleaned.includes(comp)) break
-      }
-      // Heuristic: lines near date patterns that contain proper-case words might be company names
-    }
-    // Even without precise matching, the count mismatch is enough
   }
 
   const hasEducation = lower.includes('university') || lower.includes('college') || lower.includes('bachelor') || lower.includes('master') || lower.includes('degree') || lower.includes('phd') || lower.includes('mba') || lower.includes('bsc') || lower.includes('msc')
@@ -570,6 +564,7 @@ export async function generateCoverLetter(
   tone: 'professional' | 'conversational',
   onStream?: (chunk: string) => void
 ): Promise<string> {
+  if (!jobDescription?.trim()) throw new Error('A job description is required to generate a cover letter. Paste the job posting first.')
   const prompt = `You are an expert cover letter writer. Write a complete, compelling cover letter for this candidate.
 
 Candidate background:
@@ -720,9 +715,10 @@ async function runAnthropic(
   let inputTokens = 0
   let outputTokens = 0
 
+  const anthropicMaxTokens = config.model.includes('haiku') ? 8000 : 16000
   const stream = client.messages.stream({
     model: config.model,
-    max_tokens: 16000,
+    max_tokens: anthropicMaxTokens,
     temperature: 0.3,
     messages: [{ role: 'user', content: prompt }],
   })

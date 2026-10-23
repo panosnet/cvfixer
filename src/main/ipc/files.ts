@@ -21,6 +21,10 @@ export function registerFileHandlers(ipcMain: IpcMain): void {
       if (result.canceled || !result.filePaths[0]) return null
 
       const filePath = result.filePaths[0]
+      const stats = await fs.promises.stat(filePath)
+      if (stats.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+        return { error: `File too large (${(stats.size / 1024 / 1024).toFixed(1)}MB). Maximum is ${MAX_FILE_SIZE_MB}MB.` }
+      }
       const text = await parseFile(filePath)
       const fileName = path.basename(filePath)
       return { text, fileName, filePath }

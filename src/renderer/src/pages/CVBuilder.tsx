@@ -349,7 +349,7 @@ export default function CVBuilder() {
         </div>
 
         <div className="flex-1 overflow-auto p-8">
-          <div className="mx-auto" style={{ width: 794, minHeight: 1123 * zoom }}>
+          <div className="mx-auto" style={{ width: 794, minHeight: 1123 }}>
             <div style={{ transformOrigin: 'top center', transform: `scale(${zoom})`, width: 794 }}>
               <div className="shadow-2xl shadow-black/50 rounded-sm overflow-hidden">
                 <div ref={previewRef}>
@@ -531,8 +531,8 @@ function ContentEditor({ cv, store }: { cv: any; store: ReturnType<typeof useSto
             </div>
             <div className="space-y-2">
               <Field label="Name" value={p.name} onChange={(v) => store.updateProject(i, { name: v })} />
-              <Field label="URL" value={(p as any).url} onChange={(v) => store.updateProject(i, { url: v } as any)} />
-              <Field label="Start Date" value={(p as any).startDate} onChange={(v) => store.updateProject(i, { startDate: v } as any)} />
+              <Field label="URL" value={p.url} onChange={(v) => store.updateProject(i, { url: v })} />
+              <Field label="Start Date" value={p.startDate} onChange={(v) => store.updateProject(i, { startDate: v })} />
               <div>
                 <div className="text-xs text-slate-600 mb-0.5">Description</div>
                 <textarea
@@ -646,13 +646,14 @@ function AIChatPanel({ cv, store, messages, setMessages }: { cv: any; store: Ret
       )
       if (result.success && result.cv) {
         store.updateCurrentCV(result.cv)
+        let capturedStream = ''
         setMessages(prev => {
           const updated = [...prev]
-          const captured = updated[updated.length - 1]?.rawStream ?? ''
-          store.addActivityLog({ timestamp: Date.now(), type: 'chat', label: `Chat: "${msg.slice(0, 60)}${msg.length > 60 ? '…' : ''}"`, content: captured, model: store.activeConfig?.model ?? '' })
-          updated[updated.length - 1] = { role: 'assistant', text: 'Done — CV updated.', rawStream: captured, done: true }
+          capturedStream = updated[updated.length - 1]?.rawStream ?? ''
+          updated[updated.length - 1] = { role: 'assistant', text: 'Done — CV updated.', rawStream: capturedStream, done: true }
           return updated
         })
+        store.addActivityLog({ timestamp: Date.now(), type: 'chat', label: `Chat: "${msg.slice(0, 60)}${msg.length > 60 ? '…' : ''}"`, content: capturedStream, model: store.activeConfig?.model ?? '' })
         store.addToast('CV updated from chat', 'success')
       } else {
         setMessages(prev => {
