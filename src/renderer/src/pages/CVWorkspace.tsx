@@ -5,7 +5,7 @@ import {
   Link, Globe, Copy, Check, Lightbulb, ChevronDown, ChevronUp,
   RefreshCw, Info, Eye, Zap, MessageSquare, Award, Terminal, Settings2, Trash2, Plus
 } from 'lucide-react'
-import { useStore } from '../store/appStore'
+import { useStore, getState } from '../store/appStore'
 
 function getStreamStatus(buffer: string): string {
   if (buffer.includes('"interviewPrep"')) return 'Preparing interview tips...'
@@ -69,6 +69,7 @@ export default function CVWorkspace() {
   const [showBestPractices, setShowBestPractices] = useState(false)
   const [promptModal, setPromptModal] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'results' | 'log'>('results')
+  const [addingKeyword, setAddingKeyword] = useState<string | null>(null)
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null)
 
   async function handleFile(file: File) {
@@ -151,7 +152,7 @@ export default function CVWorkspace() {
     setActiveTab('results')
 
     const logAnalysis = (label: string) =>
-      store.addActivityLog({ timestamp: Date.now(), type: 'analysis', label, content: store.streamBuffer, model: store.activeConfig?.model ?? '' })
+      store.addActivityLog({ timestamp: Date.now(), type: 'analysis', label, content: getState().streamBuffer, model: store.activeConfig?.model ?? '' })
 
     let unsubStream: (() => void) | null = null
     let unsubUsage: (() => void) | null = null
@@ -186,7 +187,8 @@ export default function CVWorkspace() {
   }
 
   async function handleAddKeyword(keyword: string) {
-    if (!store.currentCV || !store.activeConfig) return
+    if (!store.currentCV || !store.activeConfig || addingKeyword) return
+    setAddingKeyword(keyword)
     try {
       const response = await window.api.ai.chatEditCV(
         store.activeConfig, store.currentCV,
@@ -201,6 +203,8 @@ export default function CVWorkspace() {
       }
     } catch (e: any) {
       store.addToast(e.message, 'error')
+    } finally {
+      setAddingKeyword(null)
     }
   }
 
@@ -803,8 +807,8 @@ export default function CVWorkspace() {
                           <span key={kw} className="flex items-center gap-0.5 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs rounded">
                             {kw}
                             {store.currentCV && store.activeConfig && (
-                              <button onClick={() => handleAddKeyword(kw)} title={`Add "${kw}" to CV`} className="ml-0.5 text-amber-500 hover:text-amber-200 transition-colors">
-                                <Plus size={10} />
+                              <button onClick={() => handleAddKeyword(kw)} title={`Add "${kw}" to CV`} disabled={!!addingKeyword} className="ml-0.5 text-amber-500 hover:text-amber-200 transition-colors disabled:opacity-40">
+                                {addingKeyword === kw ? <Loader2 size={10} className="animate-spin" /> : <Plus size={10} />}
                               </button>
                             )}
                           </span>
