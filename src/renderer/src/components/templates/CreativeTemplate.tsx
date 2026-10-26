@@ -70,7 +70,7 @@ export default function CreativeTemplate({ cv, design }: TemplateProps) {
                       {p.url ? <a href={p.url} style={{ color: colors.primary, textDecoration: 'none' }}>{p.name}</a> : p.name}
                       {p.startDate && <span style={{ fontSize: '10px', color: secondary, marginLeft: '8px' }}>{p.startDate}</span>}
                     </div>
-                    <div style={{ fontSize: '11px', color: secondary, marginTop: '3px' }}>{p.description}</div>
+                    {p.description && <div style={{ fontSize: '11px', color: secondary, marginTop: '3px' }}>{p.description}</div>}
                     {p.technologies?.length > 0 && (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
                         {p.technologies.map((t, j) => (

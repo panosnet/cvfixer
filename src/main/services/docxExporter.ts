@@ -154,7 +154,7 @@ export async function exportToDocx(cv: RewrittenCV, designColors?: DesignColors)
       }))
       children.push(para([exp.startDate, exp.endDate].filter(Boolean).join(' – '), { italic: true, size: 18 }))
       for (const b of exp.bullets ?? []) {
-        children.push(bullet(b))
+        if (b?.trim()) children.push(bullet(b))
       }
     }
   }
@@ -189,7 +189,7 @@ export async function exportToDocx(cv: RewrittenCV, designColors?: DesignColors)
   // Certifications
   if (cv.certifications?.length > 0) {
     children.push(heading('Certifications'))
-    for (const c of cv.certifications) children.push(bullet(c))
+    for (const c of cv.certifications) { if (c?.trim()) children.push(bullet(c)) }
   }
 
   // Projects
@@ -222,19 +222,19 @@ export async function exportToDocx(cv: RewrittenCV, designColors?: DesignColors)
   // Achievements
   if (cv.achievements?.length > 0) {
     children.push(heading('Achievements & Awards'))
-    for (const a of cv.achievements) children.push(bullet(a))
+    for (const a of cv.achievements) { if (a?.trim()) children.push(bullet(a)) }
   }
 
   // Publications
   if (cv.publications?.length > 0) {
     children.push(heading('Publications'))
-    for (const p of cv.publications) children.push(bullet(p))
+    for (const p of cv.publications) { if (p?.trim()) children.push(bullet(p)) }
   }
 
   // Volunteer
   if (cv.volunteer?.length > 0) {
     children.push(heading('Volunteer & Community'))
-    for (const v of cv.volunteer) children.push(bullet(v))
+    for (const v of cv.volunteer) { if (v?.trim()) children.push(bullet(v)) }
   }
 
   const doc = new Document({

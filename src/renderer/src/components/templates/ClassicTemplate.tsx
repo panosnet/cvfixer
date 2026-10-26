@@ -108,7 +108,7 @@ export default function ClassicTemplate({ cv, design }: TemplateProps) {
                 {p.url ? <a href={p.url} style={{ color: colors.primary, textDecoration: 'none' }}>{p.name}</a> : p.name}
                 {p.startDate && <span style={{ fontSize: '11px', color: secondary, marginLeft: '8px' }}>{p.startDate}</span>}
               </div>
-              <div style={{ fontSize: '12px', marginTop: '2px' }}>{p.description}</div>
+              {p.description && <div style={{ fontSize: '12px', marginTop: '2px' }}>{p.description}</div>}
               {p.technologies?.length > 0 && <div style={{ fontSize: '11px', color: secondary, marginTop: '2px' }}>{p.technologies.join(' · ')}</div>}
             </div>
           ))}

@@ -1,8 +1,10 @@
 export function normalizeUrl(value: string, prefix: string): string {
   if (!value) return ''
   if (value.startsWith('http://') || value.startsWith('https://')) return value
+  // Strip www. prefix for domain comparison, then build clean URL
+  const bare = value.startsWith('www.') ? value.slice(4) : value
   const domain = prefix.replace(/^https?:\/\//, '')
-  if (domain && value.startsWith(domain)) return 'https://' + value
+  if (domain && (bare.startsWith(domain) || value.startsWith(domain))) return 'https://' + bare
   return prefix ? prefix + value : value
 }
 

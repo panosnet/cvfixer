@@ -122,7 +122,7 @@ export default function MinimalTemplate({ cv, design }: TemplateProps) {
                 <div style={{ fontWeight: 700, fontSize: '12px' }}>
                   {p.url ? <a href={p.url} style={{ color: colors.primary, textDecoration: 'none' }}>{p.name}</a> : p.name}
                 </div>
-                <div style={{ fontSize: '11px', color: secondary, marginTop: '2px' }}>{p.description}</div>
+                {p.description && <div style={{ fontSize: '11px', color: secondary, marginTop: '2px' }}>{p.description}</div>}
                 {p.technologies?.length > 0 && (
                   <div style={{ fontSize: '10px', color: colors.primary, marginTop: '3px' }}>{p.technologies.join(' · ')}</div>
                 )}

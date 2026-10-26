@@ -55,6 +55,8 @@ async function parseRTF(filePath: string): Promise<string> {
   const content = (await readFile(filePath, 'latin1')).toString()
   return content
     .replace(/\{\\[^{}]*\}/g, '')
+    .replace(/\\par\b ?/g, '\n')         // \par → newline before stripping other control words
+    .replace(/\\line\b ?/g, '\n')
     .replace(/\\[a-z]+\-?\d* ?/g, ' ')
     .replace(/\\\n/g, '\n')
     .replace(/[{}\\]/g, '')
