@@ -32,6 +32,7 @@ export interface CVAnalysisResult {
   industryDetected: string
   keywordsFound: string[]
   keywordsMissing: string[]
+  missingKeywords?: string[]
   atsTips: string[]
   coverLetterOpening: string
   bulletQualityIssues: Array<{ job: string; bullet: string; issue: string; fix: string }>
@@ -146,7 +147,7 @@ SELF-CHECK before outputting:
 
 ═══ CRITICAL: PRESERVE ALL POSITIONS ═══
 I have detected approximately ${positionCount} positions/roles in this CV.
-${positionHints.length > 0 ? `Here are date-bearing lines I found:\n${positionHints.map((h, i) => `  ${i + 1}. ${h}`).join('\n')}` : ''}
+${positionHints.length > 0 ? `Here are date-bearing lines I found:\n${positionHints.slice(0, 15).map((h, i) => `  ${i + 1}. ${h}`).join('\n')}` : ''}
 
 YOU MUST INCLUDE EVERY SINGLE POSITION. Do not skip, merge, or summarize any roles.
 If you are running low on output space, use 2 bullets per older role instead of skipping entire positions.
@@ -433,6 +434,17 @@ function validateResult(result: unknown, originalCvText?: string): CVAnalysisRes
   if (!Array.isArray(cv.publications)) cv.publications = []
   if (!Array.isArray(cv.volunteer)) cv.volunteer = []
   if (!Array.isArray(cv.projects)) cv.projects = []
+  cv.certifications = cv.certifications.filter((s: any) => typeof s === 'string' && s.trim())
+  cv.achievements = cv.achievements.filter((s: any) => typeof s === 'string' && s.trim())
+  cv.publications = cv.publications.filter((s: any) => typeof s === 'string' && s.trim())
+  cv.volunteer = cv.volunteer.filter((s: any) => typeof s === 'string' && s.trim())
+  cv.projects = cv.projects.map((p: any) => ({
+    name: String(p?.name ?? ''),
+    description: p?.description ? String(p.description) : '',
+    technologies: Array.isArray(p?.technologies) ? p.technologies.filter((t: any) => typeof t === 'string') : [],
+    url: p?.url ? String(p.url) : undefined,
+    startDate: p?.startDate ? String(p.startDate) : undefined,
+  }))
   for (const exp of cv.experience) {
     if (!exp.title) exp.title = ''
     if (!exp.company) exp.company = ''
@@ -440,6 +452,7 @@ function validateResult(result: unknown, originalCvText?: string): CVAnalysisRes
     if (!exp.startDate) exp.startDate = ''
     if (!exp.endDate) exp.endDate = ''
     if (!Array.isArray(exp.bullets)) exp.bullets = []
+    exp.bullets = exp.bullets.filter((b: any) => typeof b === 'string')
   }
   for (const edu of cv.education) {
     if (!edu.degree) edu.degree = ''
@@ -674,6 +687,8 @@ Return the complete modified CV JSON now:`
 
   // Validate the returned CV has the basic structure
   if (!parsed.name) parsed.name = cv.name
+  if (!parsed.title) parsed.title = cv.title ?? ''
+  if (!parsed.summary) parsed.summary = cv.summary ?? ''
   if (!parsed.contact) parsed.contact = cv.contact
   if (!Array.isArray(parsed.experience)) parsed.experience = cv.experience
   parsed.experience = parsed.experience.map((e: any, i: number) => ({
@@ -682,7 +697,7 @@ Return the complete modified CV JSON now:`
     location: e.location ?? cv.experience[i]?.location ?? '',
     startDate: e.startDate ?? cv.experience[i]?.startDate ?? '',
     endDate: e.endDate ?? cv.experience[i]?.endDate ?? '',
-    bullets: Array.isArray(e.bullets) ? e.bullets : cv.experience[i]?.bullets ?? [],
+    bullets: Array.isArray(e.bullets) ? e.bullets.filter((b: any) => typeof b === 'string') : cv.experience[i]?.bullets ?? [],
   }))
   if (!Array.isArray(parsed.education)) parsed.education = cv.education
   if (!parsed.skills) {

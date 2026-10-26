@@ -349,8 +349,9 @@ export default function CVBuilder() {
         </div>
 
         <div className="flex-1 overflow-auto p-8">
-          <div className="mx-auto" style={{ width: 794, minHeight: 1123 }}>
-            <div style={{ transformOrigin: 'top center', transform: `scale(${zoom})`, width: 794 }}>
+          <div className="mx-auto" style={{ width: 794 }}>
+            {/* CSS zoom affects layout (unlike transform:scale), so scroll container sizes correctly at all zoom levels */}
+            <div style={{ zoom: zoom }}>
               <div className="shadow-2xl shadow-black/50 rounded-sm overflow-hidden">
                 <div ref={previewRef}>
                   <Component cv={cv} design={design} />
@@ -616,7 +617,7 @@ function AIChatPanel({ cv, store, messages, setMessages }: { cv: any; store: Ret
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages.length])
+  }, [messages])
 
   async function handleSend() {
     const msg = input.trim()
@@ -646,10 +647,10 @@ function AIChatPanel({ cv, store, messages, setMessages }: { cv: any; store: Ret
       )
       if (result.success && result.cv) {
         store.updateCurrentCV(result.cv)
-        let capturedStream = ''
+        // Read stream from current messages state BEFORE calling setMessages (setter is async)
+        const capturedStream = messages[messages.length - 1]?.rawStream ?? ''
         setMessages(prev => {
           const updated = [...prev]
-          capturedStream = updated[updated.length - 1]?.rawStream ?? ''
           updated[updated.length - 1] = { role: 'assistant', text: 'Done — CV updated.', rawStream: capturedStream, done: true }
           return updated
         })
