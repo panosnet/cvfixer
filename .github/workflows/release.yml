@@ -89,7 +89,7 @@ jobs:
         run: npm ci
 
       - name: Install Linux build deps
-        run: sudo apt-get install -y rpm fakeroot
+        run: sudo apt-get install -y fakeroot
 
       - name: Build & package (Linux)
         run: npm run dist:linux
@@ -120,8 +120,12 @@ jobs:
         run: |
           if [ -n "${{ github.event.inputs.version }}" ]; then
             echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-          else
+          elif [[ "${GITHUB_REF_NAME}" == v* ]]; then
             echo "version=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          else
+            # Fallback: read from package.json when triggered manually on a branch
+            PKG_VERSION=$(node -p "require('./package.json').version")
+            echo "version=v${PKG_VERSION}" >> $GITHUB_OUTPUT
           fi
 
       - name: Create Release

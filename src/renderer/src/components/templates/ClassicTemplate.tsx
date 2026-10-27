@@ -105,7 +105,7 @@ export default function ClassicTemplate({ cv, design }: TemplateProps) {
           {cv.projects.map((p, i) => (
             <div key={i} className="project-entry" style={{ marginBottom: '10px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
               <div style={{ fontWeight: 700, fontSize: '13px' }}>
-                {p.url ? <a href={p.url} style={{ color: colors.primary, textDecoration: 'none' }}>{p.name}</a> : p.name}
+                {p.url ? <a href={normalizeUrl(p.url, '')} style={{ color: colors.primary, textDecoration: 'none' }}>{p.name}</a> : p.name}
                 {p.startDate && <span style={{ fontSize: '11px', color: secondary, marginLeft: '8px' }}>{p.startDate}</span>}
               </div>
               {p.description && <div style={{ fontSize: '12px', marginTop: '2px' }}>{p.description}</div>}
