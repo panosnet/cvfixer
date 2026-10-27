@@ -351,9 +351,10 @@ export default function CVBuilder() {
         <div className="flex-1 overflow-auto p-8">
           <div className="mx-auto" style={{ width: 794 }}>
             {/* CSS zoom affects layout (unlike transform:scale), so scroll container sizes correctly at all zoom levels */}
+            {/* previewRef wraps the template directly (no overflow-hidden parent) so innerHTML captures full multi-page content */}
             <div style={{ zoom: zoom }}>
-              <div className="shadow-2xl shadow-black/50 rounded-sm overflow-hidden">
-                <div ref={previewRef}>
+              <div className="shadow-2xl shadow-black/50 rounded-sm">
+                <div ref={previewRef} style={{ overflow: 'visible' }}>
                   <Component cv={cv} design={design} />
                 </div>
               </div>
@@ -614,6 +615,7 @@ function AIChatPanel({ cv, store, messages, setMessages }: { cv: any; store: Ret
   const [expandedThinking, setExpandedThinking] = useState<number | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const streamAccRef = useRef('')
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -626,16 +628,17 @@ function AIChatPanel({ cv, store, messages, setMessages }: { cv: any; store: Ret
     setInput('')
     setMessages(prev => [...prev, { role: 'user', text: msg, done: true }])
     setSending(true)
+    streamAccRef.current = ''
 
     setMessages(prev => [...prev, { role: 'assistant', text: '', rawStream: '', done: false }])
 
     const unsubStream = window.api.ai.onChatStream((chunk) => {
+      streamAccRef.current += chunk
       setMessages(prev => {
         const updated = [...prev]
         const last = updated[updated.length - 1]
         if (last?.role === 'assistant' && !last.done) {
-          const next = (last.rawStream ?? '') + chunk
-          updated[updated.length - 1] = { ...last, rawStream: next, text: next }
+          updated[updated.length - 1] = { ...last, rawStream: streamAccRef.current, text: streamAccRef.current }
         }
         return updated
       })
@@ -647,8 +650,7 @@ function AIChatPanel({ cv, store, messages, setMessages }: { cv: any; store: Ret
       )
       if (result.success && result.cv) {
         store.updateCurrentCV(result.cv)
-        // Read stream from current messages state BEFORE calling setMessages (setter is async)
-        const capturedStream = messages[messages.length - 1]?.rawStream ?? ''
+        const capturedStream = streamAccRef.current
         setMessages(prev => {
           const updated = [...prev]
           updated[updated.length - 1] = { role: 'assistant', text: 'Done — CV updated.', rawStream: capturedStream, done: true }

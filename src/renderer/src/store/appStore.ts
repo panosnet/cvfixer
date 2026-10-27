@@ -216,7 +216,12 @@ export const actions = {
   setCVText: (cvText: string, cvFileName?: string) =>
     update({ cvText, cvFileName: cvFileName !== undefined ? cvFileName : state.cvFileName }),
 
+  setCVTextDebounced: (cvText: string, cvFileName?: string) =>
+    updateDebounced({ cvText, cvFileName: cvFileName !== undefined ? cvFileName : state.cvFileName }),
+
   setJobDescription: (jobDescription: string) => update({ jobDescription }),
+
+  setJobDescriptionDebounced: (jobDescription: string) => updateDebounced({ jobDescription }),
 
   setIsAnalyzing: (isAnalyzing: boolean) => updateTransient({ isAnalyzing }),
 

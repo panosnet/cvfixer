@@ -302,7 +302,7 @@ export default function CVWorkspace() {
                 </div>
                 <textarea
                   value={store.cvText}
-                  onChange={(e) => store.setCVText(e.target.value, '')}
+                  onChange={(e) => store.setCVTextDebounced(e.target.value, '')}
                   className="w-full h-40 bg-slate-800 border border-slate-700 rounded-lg p-3 text-slate-300 text-xs font-mono resize-none focus:outline-none focus:border-violet-500"
                 />
               </div>
@@ -339,7 +339,7 @@ export default function CVWorkspace() {
               <div className="p-4">
                 <textarea
                   value={store.jobDescription}
-                  onChange={(e) => store.setJobDescription(e.target.value)}
+                  onChange={(e) => store.setJobDescriptionDebounced(e.target.value)}
                   placeholder="Paste the job description here for targeted CV rewriting and keyword optimization..."
                   className="w-full h-44 bg-slate-800 border border-slate-700 rounded-lg p-3 text-slate-300 text-sm resize-none focus:outline-none focus:border-violet-500 placeholder-slate-600 leading-relaxed"
                 />
