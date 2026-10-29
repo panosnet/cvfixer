@@ -397,7 +397,7 @@ function ContentEditor({ cv, store }: { cv: any; store: ReturnType<typeof useSto
       </section>
 
       {cv.experience?.map((exp: any, ei: number) => (
-        <section key={ei} className="border border-slate-700 rounded-xl p-3">
+        <section key={`exp-${exp.company}-${exp.startDate}-${ei}`} className="border border-slate-700 rounded-xl p-3">
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Experience Entry</div>
             <button onClick={() => store.removeExperience(ei)} className="text-slate-600 hover:text-red-400 transition-colors" title="Remove entry"><X size={14} /></button>
@@ -447,7 +447,7 @@ function ContentEditor({ cv, store }: { cv: any; store: ReturnType<typeof useSto
       <section>
         <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">Education</div>
         {cv.education?.map((edu: any, i: number) => (
-          <div key={i} className="mb-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+          <div key={`edu-${edu.institution}-${edu.year}-${i}`} className="mb-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
             <div className="flex justify-end mb-1">
               <button onClick={() => store.removeEducation(i)} className="text-slate-600 hover:text-red-400 transition-colors" title="Remove entry"><X size={14} /></button>
             </div>
@@ -527,7 +527,7 @@ function ContentEditor({ cv, store }: { cv: any; store: ReturnType<typeof useSto
       <section>
         <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">Projects</div>
         {cv.projects?.map((p: any, i: number) => (
-          <div key={i} className="mb-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+          <div key={`proj-${p.name}-${i}`} className="mb-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
             <div className="flex justify-end mb-1">
               <button onClick={() => store.removeProject(i)} className="text-slate-600 hover:text-red-400 transition-colors" title="Remove entry"><X size={14} /></button>
             </div>

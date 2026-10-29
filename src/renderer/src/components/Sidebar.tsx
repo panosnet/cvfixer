@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { FileText, Cpu, Key, Wand2, Layout, CheckCircle, Circle, AlertCircle, RotateCcw } from 'lucide-react'
+import { Home, Cpu, Key, Wand2, Layout, CheckCircle, Circle, AlertCircle, RotateCcw } from 'lucide-react'
 import { useStore } from '../store/appStore'
 
 const nav = [
-  { id: 'welcome', label: 'Home', icon: FileText },
+  { id: 'welcome', label: 'Home', icon: Home },
   { id: 'models', label: 'AI Models', icon: Cpu },
   { id: 'apikeys', label: 'API Keys', icon: Key },
   { id: 'workspace', label: 'Analyze CV', icon: Wand2 },

@@ -584,8 +584,8 @@ Candidate background:
 - Name: ${cv.name}
 - Title: ${cv.title}
 - Summary: ${cv.summary}
-- Most recent role: ${cv.experience[0]?.title ?? ''} at ${cv.experience[0]?.company ?? ''}
-- Key achievements: ${cv.experience[0]?.bullets?.slice(0, 3).join('; ') ?? ''}
+- Recent roles: ${cv.experience.slice(0, 3).map(e => `${e.title} at ${e.company}`).join(' → ')}
+- Key achievements: ${[...(cv.experience[0]?.bullets?.slice(0, 2) ?? []), ...(cv.experience[1]?.bullets?.slice(0, 1) ?? [])].filter(Boolean).join('; ')}
 - Core competencies: ${cv.coreCompetencies?.join(', ') ?? ''}
 
 Job Description:
@@ -704,8 +704,11 @@ Return the complete modified CV JSON now:`
     parsed.skills = cv.skills
   } else {
     if (!Array.isArray(parsed.skills.technical)) parsed.skills.technical = cv.skills?.technical ?? []
+    else parsed.skills.technical = parsed.skills.technical.filter((s: any) => typeof s === 'string')
     if (!Array.isArray(parsed.skills.soft)) parsed.skills.soft = cv.skills?.soft ?? []
+    else parsed.skills.soft = parsed.skills.soft.filter((s: any) => typeof s === 'string')
     if (!Array.isArray(parsed.skills.languages)) parsed.skills.languages = cv.skills?.languages ?? []
+    else parsed.skills.languages = parsed.skills.languages.filter((s: any) => typeof s === 'string')
   }
   if (!Array.isArray(parsed.certifications)) parsed.certifications = cv.certifications ?? []
   if (!Array.isArray(parsed.coreCompetencies)) parsed.coreCompetencies = cv.coreCompetencies ?? []
@@ -940,6 +943,11 @@ function parseJSON(raw: string): unknown {
 
   // Strip trailing commas (common AI output error)
   candidate = candidate.replace(/,\s*([\]}])/g, '$1')
+
+  // Normalize single-quoted keys/values (some small Ollama models output {'key': 'value'})
+  candidate = candidate
+    .replace(/'([^']*)'(\s*:)/g, '"$1"$2')   // 'key': → "key":
+    .replace(/:\s*'([^']*)'/g, ': "$1"')      // : 'value' → : "value"
 
   try {
     return JSON.parse(candidate)

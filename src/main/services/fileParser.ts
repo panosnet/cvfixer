@@ -52,11 +52,23 @@ async function parseDOCX(filePath: string): Promise<string> {
 }
 
 async function parseRTF(filePath: string): Promise<string> {
-  const content = (await readFile(filePath, 'latin1')).toString()
+  // Try UTF-8 first (modern RTF from Word on macOS/Windows); fall back to latin1
+  let content: string
+  try {
+    content = (await readFile(filePath, 'utf-8')).toString()
+    if (content.includes('�')) throw new Error('invalid utf8')
+  } catch {
+    content = (await readFile(filePath, 'latin1')).toString()
+  }
   return content
+    .replace(/\\u(-?\d+)\s?/g, (_, code) => {     // RTF Unicode escapes \uN
+      const n = parseInt(code)
+      return String.fromCharCode(n < 0 ? n + 65536 : n)
+    })
     .replace(/\{\\[^{}]*\}/g, '')
-    .replace(/\\par\b ?/g, '\n')         // \par → newline before stripping other control words
+    .replace(/\\par\b ?/g, '\n')
     .replace(/\\line\b ?/g, '\n')
+    .replace(/\\tab\b ?/g, '\t')
     .replace(/\\[a-z]+\-?\d* ?/g, ' ')
     .replace(/\\\n/g, '\n')
     .replace(/[{}\\]/g, '')

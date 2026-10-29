@@ -213,13 +213,18 @@ export const actions = {
     update({ apiKeys, activeConfig })
   },
 
-  setCVText: (cvText: string, cvFileName?: string) =>
-    update({ cvText, cvFileName: cvFileName !== undefined ? cvFileName : state.cvFileName }),
+  setCVText: (cvText: string, cvFileName?: string) => {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null }
+    update({ cvText, cvFileName: cvFileName !== undefined ? cvFileName : state.cvFileName })
+  },
 
   setCVTextDebounced: (cvText: string, cvFileName?: string) =>
     updateDebounced({ cvText, cvFileName: cvFileName !== undefined ? cvFileName : state.cvFileName }),
 
-  setJobDescription: (jobDescription: string) => update({ jobDescription }),
+  setJobDescription: (jobDescription: string) => {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null }
+    update({ jobDescription })
+  },
 
   setJobDescriptionDebounced: (jobDescription: string) => updateDebounced({ jobDescription }),
 

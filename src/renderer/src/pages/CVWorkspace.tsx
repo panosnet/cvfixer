@@ -565,6 +565,7 @@ export default function CVWorkspace() {
           <button
             onClick={handleAnalyze}
             disabled={!store.cvText || store.isAnalyzing || !store.activeConfig}
+            title={!store.activeConfig ? 'Choose an AI model first (AI Models page)' : !store.cvText ? 'Upload or paste your CV first' : undefined}
             className="flex items-center justify-center gap-2 w-full py-3.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-colors shadow-lg shadow-violet-900/30"
           >
             {store.isAnalyzing ? (
@@ -865,7 +866,9 @@ export default function CVWorkspace() {
               <Wand2 size={40} className="text-slate-700 mb-4" />
               <p className="text-white font-medium text-sm mb-2">Ready to analyze</p>
               <p className="text-slate-500 text-sm leading-relaxed">
-                Upload your CV, optionally add a job description, then click Analyze. The AI will score, rewrite, and suggest a visual design.
+                {store.aiActivityLog.length > 0
+                  ? 'Upload a new CV and click Analyze, or switch to the AI Log tab to review previous runs.'
+                  : 'Upload your CV, optionally add a job description, then click Analyze. The AI will score, rewrite, and suggest a visual design.'}
               </p>
             </div>
           )}
@@ -933,7 +936,6 @@ function AnalysisPanel({ status, progress, buffer, tokenUsage, analysisStartTime
       {/* Progress bar */}
       <div className="px-4 py-2 border-b border-slate-800">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-xs text-slate-500">{status}</span>
           <span className="text-xs text-slate-500">{progress}%</span>
         </div>
         <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
